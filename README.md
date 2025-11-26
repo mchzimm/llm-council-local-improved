@@ -27,6 +27,7 @@ In a bit more detail, here is what happens when you submit a query:
 
 ## Recent Changes
 
+- ✅ **Enhanced Title Generation & Timeout Handling (v0.0.3)**: Sequential title generation, proper retry logic, circuit breaker pattern, and configurable timeouts for better reliability
 - ✅ **Per-Model Connection Configuration**: Individual connection settings (IP, port, API base URL, API keys) for each model, enabling mixed deployment scenarios
 - ✅ **Enhanced Model Validation**: Validates each model against its configured endpoint with detailed error reporting
 - ✅ **Background Title Generation**: Automatic meaningful conversation titles with real-time UI updates
@@ -208,6 +209,27 @@ Each model supports individual connection settings that override server defaults
 - `thinking_models`: Keywords to identify thinking models (default: ["thinking", "reasoning", "o1"])
 - `auto_expand_thinking`: Auto-expand thinking sections in UI (default: true)
 
+**Timeout Configuration (v0.0.3+):**
+- `default_timeout`: Default request timeout in seconds (default: 30)
+- `title_generation_timeout`: Extended timeout for title generation (default: 60)
+- `max_retries`: Maximum retry attempts for failed requests (default: 3)
+- `retry_backoff_factor`: Exponential backoff multiplier for retries (default: 2)
+- `circuit_breaker_threshold`: Failure count to trigger circuit breaker (default: 5)
+- `connection_timeout`: Connection establishment timeout (default: 10)
+
+```json
+{
+  "timeout_config": {
+    "default_timeout": 30,
+    "title_generation_timeout": 60,
+    "max_retries": 3,
+    "retry_backoff_factor": 2,
+    "circuit_breaker_threshold": 5,
+    "connection_timeout": 10
+  }
+}
+```
+
 ### 3.1. Model Validation & Connectivity
 
 The application automatically validates your LLM server setup on startup:
@@ -223,26 +245,36 @@ The application automatically validates your LLM server setup on startup:
 - **Graceful Failure**: App won't start with invalid configuration
 - **Troubleshooting Tips**: Helpful guidance for common setup issues
 
-### 3.2. Immediate Title Generation
+### 3.2. Enhanced Title Generation & Reliability (v0.0.3)
 
-The system includes real-time title generation for active conversations:
+**Sequential Processing:**
+- **Title First**: Title generation now runs before council deliberation to prevent server overload
+- **Blocking Design**: Council members wait for title completion, ensuring resources aren't overwhelmed
+- **Immediate Feedback**: Users see title generation progress in real-time
 
-**Instant Processing:**
-- **Automatic Trigger**: When you submit the first message to a new conversation
-- **Priority Queue**: Immediate processing bypassing background queue for active users
-- **Real-time Updates**: Live title updates via WebSocket connection without page refresh
-- **Visual Feedback**: Progress indicators (⏳ "Generating title...") with smooth animations
+**Advanced Error Handling:**
+- **Timeout Management**: Configurable timeouts for different request types (connection, read, title generation)
+- **Retry Logic**: Exponential backoff with configurable retry attempts and delay factors
+- **Circuit Breaker**: Automatic protection against unresponsive models with failure thresholds
+- **Graceful Degradation**: Falls back to default titles when generation fails
 
-**User Experience:**
-- **Immediate Response**: Title generation starts within 500ms of message submission
-- **Parallel Processing**: Runs alongside council deliberation without adding delays
-- **Live Progress**: Watch titles evolve from "Conversation abc12345" to meaningful descriptions
-- **Thinking Display**: For reasoning models, see expandable thinking processes
+**Real-time Processing:**
+- **Progress Updates**: Live status updates during title generation ("generating", "thinking", "complete")
+- **WebSocket Streaming**: Real-time communication for immediate UI feedback
+- **Error Recovery**: Transparent retry attempts with user-visible progress
+- **Thinking Model Support**: Special handling for reasoning models with expandable thought processes
 
-**Fallback System:**
-- **Error Recovery**: Graceful degradation to background processing if immediate fails
-- **100% Coverage**: All conversations eventually get meaningful titles
-- **Configuration**: Can be enabled/disabled via `title_generation.immediate_enabled` setting
+**Configuration:**
+```json
+{
+  "timeout_config": {
+    "title_generation_timeout": 60,    // Extended timeout for complex title generation
+    "max_retries": 3,                  // Number of retry attempts
+    "retry_backoff_factor": 2,         // Exponential backoff (1s, 2s, 4s)
+    "circuit_breaker_threshold": 5     // Failures before circuit opens
+  }
+}
+```
 
 You can edit `config.json` to customize the council lineup and deliberation behavior without changing code. The backend will automatically load the new configuration on restart.
 
