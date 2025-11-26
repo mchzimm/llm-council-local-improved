@@ -59,6 +59,14 @@
     "thinking_models": ["thinking", "reasoning", "o1"],
     "auto_expand_thinking": true
   },
+  "timeout_config": {
+    "default_timeout": 30,
+    "title_generation_timeout": 60,
+    "max_retries": 3,
+    "retry_backoff_factor": 2,
+    "circuit_breaker_threshold": 5,
+    "connection_timeout": 10
+  },
   "metadata": {
     "version": "2.2",
     "updated": "2025-11-26T12:10:33.579Z",

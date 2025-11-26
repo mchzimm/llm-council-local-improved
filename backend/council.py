@@ -1,7 +1,7 @@
 """3-stage LLM Council orchestration with multi-round deliberation."""
 
 from typing import List, Dict, Any, Tuple
-from .lmstudio import query_models_parallel, query_model
+from .lmstudio import query_models_parallel, query_model_with_retry
 from .config import COUNCIL_MODELS, CHAIRMAN_MODEL
 from .config_loader import get_deliberation_rounds, get_deliberation_config
 
@@ -330,8 +330,8 @@ Provide a clear, well-reasoned final answer that represents the council's collec
 
     messages = [{"role": "user", "content": chairman_prompt}]
 
-    # Query the chairman model with extended timeout for complex synthesis
-    response = await query_model(CHAIRMAN_MODEL, messages, timeout=300.0)
+    # Query the chairman model with extended timeout and retry logic for complex synthesis
+    response = await query_model_with_retry(CHAIRMAN_MODEL, messages, timeout=300.0)
 
     if response is None:
         # Fallback if chairman fails
