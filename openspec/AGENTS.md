@@ -1,5 +1,7 @@
 # OpenSpec Instructions
 
+**NOTE: *REMEMBER TO ALWAYS follow the versioning process* defined in `/AGENTS.md` when implementing changes.**
+
 Instructions for AI coding assistants using OpenSpec for spec-driven development.
 
 ## TL;DR Quick Checklist

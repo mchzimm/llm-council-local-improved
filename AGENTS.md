@@ -157,6 +157,26 @@ Models are now configured via `models.json` file instead of hardcoded values in 
 5. **Ranking Parse Failures**: If models don't follow format, fallback regex extracts any "Response X" patterns in order
 6. **Missing Metadata**: Metadata is ephemeral (not persisted), only available in API responses
 
+## Versioning Process
+
+The project follows semantic versioning with the format `<release>.<feature>.<fix>`:
+
+### Version Number Rules
+- **Release** (x.0.0): Increment when all major features are implemented to completion (confirmed by user)
+- **Feature** (0.x.0): Increment whenever a new feature is implemented
+- **Fix** (0.0.x): Increment with every bug fix being implemented
+
+### Workflow
+1. Check existing branches to determine current version
+2. Start versioning with 0.0.1 if no version branch exists
+3. Increment appropriate version number based on change type
+4. Create new branch with version number (e.g., `v0.1.0`)
+5. Implement changes and commit to the version branch
+6. Merge to master when complete
+
+### Branch Naming Convention
+Version branches should be named: `v<release>.<feature>.<fix>` (e.g., `v0.1.0`, `v1.2.3`)
+
 ## Future Enhancement Ideas
 
 - Configurable council/chairman via UI instead of config file

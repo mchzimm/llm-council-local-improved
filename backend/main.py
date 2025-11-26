@@ -14,7 +14,7 @@ import sys
 
 from . import storage
 from .council import run_full_council, stage1_collect_responses, stage2_collect_rankings, stage3_synthesize_final, calculate_aggregate_rankings
-from .title_service import initialize_title_service, shutdown_title_service, get_title_service
+from .title_generation import title_service
 from .model_validator import validate_models
 from .config_loader import load_config
 
@@ -55,20 +55,17 @@ async def lifespan(app: FastAPI):
         sys.exit(1)
     
     try:
-        await initialize_title_service()
-        print("✅ Title generation service initialized")
+        # Title generation service is initialized on demand
+        print("✅ LLM Council API started successfully!")
     except Exception as e:
-        print(f"❌ Error initializing title service: {e}")
+        print(f"❌ Error during startup: {e}")
+        sys.exit(1)
     
     yield
     
     # Shutdown
     print("🛑 Shutting down LLM Council API...")
-    try:
-        await shutdown_title_service()
-        print("✅ Services cleaned up")
-    except Exception as e:
-        print(f"❌ Error during shutdown: {e}")
+    print("✅ Services cleaned up")
 
 app = FastAPI(title="LLM Council API", lifespan=lifespan)
 
@@ -236,13 +233,29 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
             # Add user message
             storage.add_user_message(conversation_id, request.content)
 
-            # Start immediate title generation if needed (non-blocking)
+            # **SEQUENTIAL PROCESSING**: Generate title BEFORE council deliberation
             if is_first_message and current_title.startswith("Conversation "):
-                title_service = get_title_service()
-                # Use asyncio.create_task to run in background without blocking
-                asyncio.create_task(title_service.generate_title_immediate(conversation_id, request.content))
-                yield f"data: {json.dumps({'type': 'title_generation_started'})}\n\n"
+                yield f"data: {json.dumps({'type': 'title_generation_start'})}\n\n"
+                
+                try:
+                    new_title = await title_service.generate_title(
+                        conversation_id=conversation_id,
+                        user_message=request.content,
+                        websocket_manager=None  # Direct streaming instead
+                    )
+                    
+                    if new_title:
+                        # Update conversation title immediately
+                        storage.update_conversation_title(conversation_id, new_title)
+                        yield f"data: {json.dumps({'type': 'title_complete', 'title': new_title})}\n\n"
+                    else:
+                        yield f"data: {json.dumps({'type': 'title_error', 'error': 'Failed to generate title'})}\n\n"
+                        
+                except Exception as e:
+                    print(f"Title generation error: {e}")
+                    yield f"data: {json.dumps({'type': 'title_error', 'error': str(e)})}\n\n"
 
+            # Now proceed with council deliberation
             # Stage 1: Collect responses
             yield f"data: {json.dumps({'type': 'stage1_start'})}\n\n"
             stage1_results = await stage1_collect_responses(request.content)
@@ -272,6 +285,9 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
 
         except Exception as e:
             # Send error event
+            print(f"Stream error: {e}")
+            import traceback
+            print(f"Full traceback: {traceback.format_exc()}")
             yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
 
     return StreamingResponse(
@@ -286,17 +302,42 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
 
 @app.get("/api/title-queue/status")
 async def get_title_queue_status():
-    """Get current title generation queue status."""
-    title_service = get_title_service()
-    return title_service.get_queue_status()
+    """Get current title generation status."""
+    return {
+        "enabled": True,
+        "service_type": "direct",
+        "description": "Direct title generation without queue"
+    }
 
 
 @app.post("/api/conversations/{conversation_id}/generate-title")
 async def trigger_title_generation(conversation_id: str):
     """Manually trigger title generation for a conversation."""
-    title_service = get_title_service()
-    success = await title_service.queue_title_generation(conversation_id, priority=10)  # High priority
-    return {"success": success, "message": "Title generation queued" if success else "Already in progress or not needed"}
+    try:
+        conversation = storage.get_conversation(conversation_id)
+        if not conversation:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+        
+        # Get the first user message for title generation
+        user_messages = [msg for msg in conversation["messages"] if msg["role"] == "user"]
+        if not user_messages:
+            return {"success": False, "message": "No user messages found for title generation"}
+        
+        first_message = user_messages[0]["content"]
+        new_title = await title_service.generate_title(
+            conversation_id=conversation_id,
+            user_message=first_message
+        )
+        
+        if new_title:
+            storage.update_conversation_title(conversation_id, new_title)
+            return {"success": True, "message": f"Title updated to: {new_title}", "title": new_title}
+        else:
+            return {"success": False, "message": "Failed to generate title"}
+            
+    except Exception as e:
+        print(f"Manual title generation error: {e}")
+        return {"success": False, "message": f"Error: {str(e)}"}
 
 
 @app.get("/api/conversations/{conversation_id}/title-status")
@@ -320,10 +361,8 @@ async def websocket_title_updates(websocket: WebSocket):
     """WebSocket endpoint for real-time title generation updates."""
     await websocket.accept()
     
-    # Register this WebSocket with the title service
-    title_service = get_title_service()
     client_id = str(uuid.uuid4())
-    title_service.register_websocket(client_id, websocket)
+    print(f"WebSocket client connected: {client_id}")
     
     try:
         # Keep the connection alive and handle any incoming messages
@@ -336,10 +375,9 @@ async def websocket_title_updates(websocket: WebSocket):
             except WebSocketDisconnect:
                 break
     except Exception as e:
-        print(f"WebSocket error: {e}")
+        print(f"WebSocket error for client {client_id}: {e}")
     finally:
-        # Unregister when connection closes
-        title_service.unregister_websocket(client_id)
+        print(f"WebSocket client disconnected: {client_id}")
 
 
 
