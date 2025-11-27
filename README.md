@@ -16,7 +16,13 @@ In a bit more detail, here is what happens when you submit a query:
 
 ## Key Features
 
-### Current Release (v0.6.4)
+### Current Release (v0.7.0)
+- **System Date-Time MCP Server**: New MCP server for getting current system date and time
+  - Tool: `get-system-date-time` with configurable return format
+  - Formats: time only, date only, both, or Unix timestamp
+  - Returns structured data with individual components
+
+### Previous Release (v0.6.4)
 - **Intelligent MCP Tool Calling**: Two-phase LLM-driven tool detection and execution
   - Phase 1: Analyzes queries against detailed MCP server capabilities
   - Phase 2: Generates specific tool calls with correct parameters
