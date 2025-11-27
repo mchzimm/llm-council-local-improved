@@ -7,7 +7,12 @@ import random
 from typing import Dict, Any, List, Optional
 from pathlib import Path
 
-METRICS_FILE = "llm_metrics.json"
+# Store metrics in the data directory alongside conversations
+DATA_DIR = Path(__file__).parent.parent / "data"
+METRICS_FILE = DATA_DIR / "llm_metrics.json"
+
+# Ensure data directory exists
+DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 # Default metric structure for a model
 DEFAULT_MODEL_METRICS = {

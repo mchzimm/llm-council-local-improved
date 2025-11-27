@@ -410,21 +410,228 @@ function App() {
     const userMessage = currentConversation.messages[messageIndex];
     if (!userMessage || userMessage.role !== 'user') return;
     
-    // Remove the assistant response that follows (messageIndex + 1)
+    // Remove the assistant response that follows (messageIndex + 1), keep user message
     setCurrentConversation((prev) => ({
       ...prev,
       messages: prev.messages.slice(0, messageIndex + 1),
     }));
     
-    // Re-run the council with the same message
+    // Re-run the council without adding a new user message
     setIsLoading(true);
     try {
-      // We need to resend the message - the backend will handle creating new response
-      await handleSendMessage(userMessage.content);
+      await runCouncilForMessage(userMessage.content);
     } catch (error) {
       console.error('Failed to redo message:', error);
       setIsLoading(false);
     }
+  };
+
+  const runCouncilForMessage = async (content) => {
+    // Create a partial assistant message that will be updated progressively
+    const assistantMessage = {
+      role: 'assistant',
+      stage1: null,
+      stage2: null,
+      stage3: null,
+      metadata: null,
+      loading: {
+        stage1: false,
+        stage2: false,
+        stage3: false,
+      },
+      streaming: {
+        stage1: {},
+        stage2: {},
+        stage3: { content: '', thinking: '', isStreaming: false },
+      },
+    };
+
+    // Add the partial assistant message
+    setCurrentConversation((prev) => ({
+      ...prev,
+      messages: [...prev.messages, assistantMessage],
+    }));
+
+    // Send message with token-level streaming
+    await api.sendMessageStreamTokens(currentConversationId, content, (eventType, event) => {
+      switch (eventType) {
+        case 'stage1_start':
+          setCurrentConversation((prev) => {
+            const messages = [...prev.messages];
+            const lastMsg = messages[messages.length - 1];
+            lastMsg.loading.stage1 = true;
+            return { ...prev, messages };
+          });
+          break;
+
+        case 'stage1_token':
+          setCurrentConversation((prev) => {
+            const messages = [...prev.messages];
+            const lastMsg = messages[messages.length - 1];
+            if (!lastMsg.streaming) lastMsg.streaming = { stage1: {}, stage2: {}, stage3: {} };
+            lastMsg.streaming.stage1[event.model] = {
+              ...(lastMsg.streaming.stage1[event.model] || {}),
+              content: event.content,
+              isStreaming: true,
+            };
+            return { ...prev, messages };
+          });
+          break;
+
+        case 'stage1_thinking':
+          setCurrentConversation((prev) => {
+            const messages = [...prev.messages];
+            const lastMsg = messages[messages.length - 1];
+            if (!lastMsg.streaming) lastMsg.streaming = { stage1: {}, stage2: {}, stage3: {} };
+            lastMsg.streaming.stage1[event.model] = {
+              ...(lastMsg.streaming.stage1[event.model] || {}),
+              thinking: event.thinking,
+              isStreaming: true,
+            };
+            return { ...prev, messages };
+          });
+          break;
+
+        case 'stage1_model_complete':
+          setCurrentConversation((prev) => {
+            const messages = [...prev.messages];
+            const lastMsg = messages[messages.length - 1];
+            if (lastMsg.streaming?.stage1?.[event.model]) {
+              lastMsg.streaming.stage1[event.model].isStreaming = false;
+            }
+            return { ...prev, messages };
+          });
+          break;
+
+        case 'stage1_complete':
+          setCurrentConversation((prev) => {
+            const messages = [...prev.messages];
+            const lastMsg = messages[messages.length - 1];
+            lastMsg.stage1 = event.data;
+            lastMsg.loading.stage1 = false;
+            return { ...prev, messages };
+          });
+          break;
+
+        case 'stage2_start':
+          setCurrentConversation((prev) => {
+            const messages = [...prev.messages];
+            const lastMsg = messages[messages.length - 1];
+            lastMsg.loading.stage2 = true;
+            return { ...prev, messages };
+          });
+          break;
+
+        case 'stage2_token':
+          setCurrentConversation((prev) => {
+            const messages = [...prev.messages];
+            const lastMsg = messages[messages.length - 1];
+            if (!lastMsg.streaming) lastMsg.streaming = { stage1: {}, stage2: {}, stage3: {} };
+            lastMsg.streaming.stage2[event.model] = {
+              ...(lastMsg.streaming.stage2[event.model] || {}),
+              content: event.content,
+              isStreaming: true,
+            };
+            return { ...prev, messages };
+          });
+          break;
+
+        case 'stage2_thinking':
+          setCurrentConversation((prev) => {
+            const messages = [...prev.messages];
+            const lastMsg = messages[messages.length - 1];
+            if (!lastMsg.streaming) lastMsg.streaming = { stage1: {}, stage2: {}, stage3: {} };
+            lastMsg.streaming.stage2[event.model] = {
+              ...(lastMsg.streaming.stage2[event.model] || {}),
+              thinking: event.thinking,
+              isStreaming: true,
+            };
+            return { ...prev, messages };
+          });
+          break;
+
+        case 'stage2_model_complete':
+          setCurrentConversation((prev) => {
+            const messages = [...prev.messages];
+            const lastMsg = messages[messages.length - 1];
+            if (lastMsg.streaming?.stage2?.[event.model]) {
+              lastMsg.streaming.stage2[event.model].isStreaming = false;
+            }
+            return { ...prev, messages };
+          });
+          break;
+
+        case 'stage2_complete':
+          setCurrentConversation((prev) => {
+            const messages = [...prev.messages];
+            const lastMsg = messages[messages.length - 1];
+            lastMsg.stage2 = event.data;
+            lastMsg.metadata = event.metadata;
+            lastMsg.loading.stage2 = false;
+            return { ...prev, messages };
+          });
+          break;
+
+        case 'stage3_start':
+          setCurrentConversation((prev) => {
+            const messages = [...prev.messages];
+            const lastMsg = messages[messages.length - 1];
+            lastMsg.loading.stage3 = true;
+            return { ...prev, messages };
+          });
+          break;
+
+        case 'stage3_token':
+          setCurrentConversation((prev) => {
+            const messages = [...prev.messages];
+            const lastMsg = messages[messages.length - 1];
+            if (!lastMsg.streaming) lastMsg.streaming = { stage1: {}, stage2: {}, stage3: {} };
+            lastMsg.streaming.stage3 = {
+              ...lastMsg.streaming.stage3,
+              content: event.content,
+              isStreaming: true,
+            };
+            return { ...prev, messages };
+          });
+          break;
+
+        case 'stage3_thinking':
+          setCurrentConversation((prev) => {
+            const messages = [...prev.messages];
+            const lastMsg = messages[messages.length - 1];
+            if (!lastMsg.streaming) lastMsg.streaming = { stage1: {}, stage2: {}, stage3: {} };
+            lastMsg.streaming.stage3 = {
+              ...lastMsg.streaming.stage3,
+              thinking: event.thinking,
+              isStreaming: true,
+            };
+            return { ...prev, messages };
+          });
+          break;
+
+        case 'stage3_complete':
+          setCurrentConversation((prev) => {
+            const messages = [...prev.messages];
+            const lastMsg = messages[messages.length - 1];
+            lastMsg.stage3 = { model: event.model, response: event.response };
+            lastMsg.loading.stage3 = false;
+            if (lastMsg.streaming?.stage3) {
+              lastMsg.streaming.stage3.isStreaming = false;
+            }
+            return { ...prev, messages };
+          });
+          break;
+
+        case 'complete':
+          setIsLoading(false);
+          break;
+
+        case 'error':
+          console.error('Streaming error:', event.error);
+          setIsLoading(false);
+          break;
+      }
+    });
   };
 
   const handleEditMessage = async (messageIndex, newContent) => {
@@ -437,10 +644,10 @@ function App() {
       return { ...prev, messages };
     });
     
-    // Re-run the council with the edited message
+    // Re-run the council with the edited message (without adding another user message)
     setIsLoading(true);
     try {
-      await handleSendMessage(newContent);
+      await runCouncilForMessage(newContent);
     } catch (error) {
       console.error('Failed to edit message:', error);
       setIsLoading(false);
