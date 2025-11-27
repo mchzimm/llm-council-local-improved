@@ -82,8 +82,8 @@ async def query_model_with_retry(
 async def query_model(
     model: str,
     messages: List[Dict[str, str]],
-    timeout: float = 30.0,
-    connection_timeout: float = 10.0,
+    timeout: Optional[float] = None,
+    connection_timeout: Optional[float] = None,
     max_tokens: Optional[int] = None
 ) -> Optional[Dict[str, Any]]:
     """
@@ -92,13 +92,22 @@ async def query_model(
     Args:
         model: LM Studio model identifier (e.g., "microsoft/phi-4-mini-reasoning")
         messages: List of message dicts with 'role' and 'content'
-        timeout: Request timeout in seconds
-        connection_timeout: Connection timeout in seconds
+        timeout: Request timeout in seconds (uses config default if None)
+        connection_timeout: Connection timeout in seconds (uses config default if None)
         max_tokens: Maximum tokens to generate (optional, uses model default if None)
 
     Returns:
         Response dict with 'content' and optional 'reasoning_details', or None if failed
     """
+    # Load timeout config
+    config = load_config()
+    timeout_cfg = config.get('timeout_config', {})
+    
+    if timeout is None:
+        timeout = timeout_cfg.get('default_timeout', 600)
+    if connection_timeout is None:
+        connection_timeout = timeout_cfg.get('connection_timeout', 30)
+    
     # Get connection info for this specific model
     connection_info = get_model_connection_info(model)
     api_endpoint = connection_info["api_endpoint"]
@@ -205,8 +214,8 @@ async def query_models_parallel(
 async def query_model_streaming(
     model: str,
     messages: List[Dict[str, str]],
-    timeout: float = 300.0,
-    connection_timeout: float = 10.0,
+    timeout: Optional[float] = None,
+    connection_timeout: Optional[float] = None,
     on_token: Optional[Callable[[str, str, Optional[str]], None]] = None,
     max_tokens: Optional[int] = None
 ) -> AsyncGenerator[Dict[str, Any], None]:
@@ -216,14 +225,23 @@ async def query_model_streaming(
     Args:
         model: LM Studio model identifier
         messages: List of message dicts with 'role' and 'content'
-        timeout: Request timeout in seconds
-        connection_timeout: Connection timeout in seconds
+        timeout: Per-chunk read timeout in seconds (uses config default if None)
+        connection_timeout: Connection timeout in seconds (uses config default if None)
         on_token: Optional callback (token, token_type, content_so_far) called for each token
         max_tokens: Maximum tokens to generate (optional)
 
     Yields:
         Dict with 'type' ('token', 'thinking', 'complete') and 'content' or 'delta'
     """
+    # Load timeout config
+    config = load_config()
+    timeout_config = config.get('timeout_config', {})
+    
+    if timeout is None:
+        timeout = timeout_config.get('streaming_chunk_timeout', 600)
+    if connection_timeout is None:
+        connection_timeout = timeout_config.get('connection_timeout', 30)
+    
     connection_info = get_model_connection_info(model)
     api_endpoint = connection_info["api_endpoint"]
     api_key = connection_info["api_key"]

@@ -77,15 +77,16 @@
     "auto_expand_thinking": true
   },
   "timeout_config": {
-    "default_timeout": 300,
-    "council_timeout": 300,
-    "chairman_timeout": 300,
+    "default_timeout": 600,
+    "council_timeout": 600,
+    "chairman_timeout": 600,
+    "streaming_chunk_timeout": 600,
     "title_generation_timeout": 300,
-    "evaluation_timeout": 60,
-    "max_retries": 2,
+    "evaluation_timeout": 120,
+    "max_retries": 1,
     "retry_backoff_factor": 2,
     "circuit_breaker_threshold": 5,
-    "connection_timeout": 10
+    "connection_timeout": 30
   },
   "metadata": {
     "version": "2.3",
