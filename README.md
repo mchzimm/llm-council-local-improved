@@ -16,17 +16,36 @@ In a bit more detail, here is what happens when you submit a query:
 
 ## Key Features
 
+### Current Release (v0.1.0)
+- **Token-Level Streaming**: Real-time display of LLM responses as they generate
+- **Thinking Model Display**: Expandable sections showing reasoning model thought processes
+- **Reactive Responses**: Concise prompts and configurable max_tokens for faster generation
+- **Title Tooltips**: Full conversation title on hover for truncated sidebar items
+
+### Stable Features
 - **Multi-Round Deliberation**: Configurable rounds of iterative review and refinement
 - **Background Title Generation**: Automatic meaningful titles for conversations with immediate generation for active sessions
 - **Conversation Management**: Recycle bin system for safe conversation deletion and recovery
 - **Smart Interface**: ID-based conversation labeling and intelligent button state management
-- **Thinking Model Support**: Special display for reasoning models with expandable thinking sections  
-- **Real-time Streaming**: Live progress updates during title generation and deliberation
 - **Dynamic Configuration**: Change models and settings without code modifications
 - **Local Privacy**: All processing happens locally via LM Studio - no data sent to external services
 
+### Next Release
+_See TODO.md for planned features_
+
+### Future Roadmap
+- **Model Quality Rating & Voting**: Council members rate and vote on each other's responses
+- **Auto-Model Selection**: Dynamic model selection based on historical performance
+- **Council Member Personalities**: Distinct personas for diverse perspectives
+- **Advanced Deliberation Strategies**: Debate formats, consensus building
+- **Model Performance Analytics**: Track individual model performance
+- **Custom Prompt Templates**: Specialized prompts for different domains
+- **Export & Sharing**: Export conversations in various formats
+- **Integration Plugins**: Connect with external tools and knowledge bases
+
 ## Recent Changes
 
+- ✅ **Token Streaming & Reactive Responses (v0.1.0)**: Real-time token streaming to UI, thinking model display, concise prompts
 - ✅ **Enhanced Title Generation & Timeout Handling (v0.0.3)**: Sequential title generation, proper retry logic, circuit breaker pattern, and configurable timeouts for better reliability
 - ✅ **Per-Model Connection Configuration**: Individual connection settings (IP, port, API base URL, API keys) for each model, enabling mixed deployment scenarios
 - ✅ **Enhanced Model Validation**: Validates each model against its configured endpoint with detailed error reporting
@@ -34,17 +53,6 @@ In a bit more detail, here is what happens when you submit a query:
 - ✅ **Multi-Round Deliberation**: Configurable deliberation rounds with cross-review and refinement
 - ✅ **Conversation Management**: Soft delete (recycle bin), restore, and permanent deletion with improved UI/UX
 - ✅ **Dynamic Configuration**: Runtime model and server configuration without code changes
-
-## Planned Improvements
-
-- **Model Quality Rating & Voting**: Council members rate and vote on each other's responses to automatically select the best-performing models
-- **Auto-Model Selection**: Dynamic model selection based on historical performance ratings and task-specific capabilities
-- **Council Member Personalities**: Assign distinct personas and specializations to different council members for diverse perspectives
-- **Advanced Deliberation Strategies**: Implement debate formats, consensus building, and specialized review protocols
-- **Model Performance Analytics**: Track and analyze individual model performance across different types of queries
-- **Custom Prompt Templates**: Allow users to define specialized prompts for different types of discussions or domains
-- **Export & Sharing**: Export conversations and council decisions in various formats
-- **Integration Plugins**: Connect with external tools and knowledge bases for enhanced responses
 
 ## Vibe Code Alert
 

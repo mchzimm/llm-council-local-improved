@@ -19,9 +19,57 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 # CLAUDE.md - Technical Notes for LLM Council
 
-**⚠️ BEFORE IMPLEMENTING ANY CHANGES: See "Versioning Process" section below. Create a version branch FIRST.**
+**⚠️ BEFORE IMPLEMENTING ANY CHANGES:**
+1. **Read "Change Request Handling" section** - Analyze and prioritize requests
+2. **Update TODO.md** - Add items in correct priority order
+3. **Follow "Versioning Process"** - Create version branch FIRST
+4. **After completion** - Update CHANGELOG.md, FINDINGS.md, and README.md
 
 This file contains technical details, architectural decisions, and important implementation notes for future development sessions.
+
+## Change Request Handling
+
+**CRITICAL: Follow this process when receiving ANY change request from user.**
+
+### Step 1: Analyze the Request
+1. **Identify all changes requested** - List each distinct change
+2. **Classify each change**:
+   - `[FIX]` - Bug fix or correction to existing feature
+   - `[FEATURE]` - New capability or enhancement
+   - `[REFACTOR]` - Code improvement without behavior change
+   - `[DOCS]` - Documentation update
+
+### Step 2: Prioritize Changes
+**Priority Order (implement in this sequence):**
+1. **Fixes** - Always implement bug fixes before new features
+2. **Features** - New capabilities after fixes are complete
+3. **Refactors** - Code improvements after features
+4. **Docs** - Documentation updates last (unless blocking)
+
+### Step 3: Update TODO.md
+Add items to appropriate section:
+- **Current** (max 3): Items being worked on now
+- **Next** (max 5): Queued for after Current
+- **Future**: Ideas for later
+
+Format:
+```markdown
+- [ ] **[TYPE]** Brief description
+  - Acceptance criteria
+  - Related files
+```
+
+### Step 4: Implement in Order
+1. Work through TODO.md: Current → Next → Future
+2. Complete each item fully before starting next
+3. Follow versioning process for each implementation session
+
+### Step 5: Update Tracking Files
+After each completed change:
+1. **CHANGELOG.md** - Add entry with version, branch, timestamps (UTC + local)
+2. **FINDINGS.md** - Document lessons learned and discoveries
+3. **README.md** - Update feature list (features only, not fixes)
+4. **TODO.md** - Remove completed item, move next item to Current
 
 ## Project Overview
 
