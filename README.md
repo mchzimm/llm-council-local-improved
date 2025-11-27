@@ -16,7 +16,11 @@ In a bit more detail, here is what happens when you submit a query:
 
 ## Key Features
 
-### Current Release (v0.3.1)
+### Current Release (v0.3.3)
+- **Markdown Export**: Final council answer automatically saved as markdown file
+  - Format: `<title>__YYYY-MM-DD_HH-MM-SS.md` in project root
+
+### Previous Release (v0.3.1)
 - **Auto Retry**: Council members retry up to 2 times on blank/failed responses
 - **Model Quality Metrics**: Automatic evaluation of responses to track model performance
   - Metrics: verbosity, expertise, adherence, clarity, overall rating

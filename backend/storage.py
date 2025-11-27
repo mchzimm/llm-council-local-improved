@@ -257,3 +257,58 @@ def update_conversation_title(conversation_id: str, title: str):
 
     conversation["title"] = title
     save_conversation(conversation)
+
+
+def save_final_answer_markdown(conversation_id: str, final_answer: str):
+    """
+    Save the final council answer as a markdown file.
+    
+    Args:
+        conversation_id: Conversation identifier
+        final_answer: The presenter's final formatted answer
+    """
+    import re
+    
+    conversation = get_conversation(conversation_id)
+    if conversation is None:
+        raise ValueError(f"Conversation {conversation_id} not found")
+    
+    # Get conversation title (sanitize for filename)
+    title = conversation.get("title", conversation_id)
+    # Remove/replace characters not safe for filenames
+    safe_title = re.sub(r'[<>:"/\\|?*]', '_', title)
+    safe_title = safe_title[:100]  # Limit length
+    
+    # Generate UTC timestamp
+    utc_timestamp = datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S")
+    
+    # Create filename
+    filename = f"{safe_title}__{utc_timestamp}.md"
+    filepath = Path(DATA_DIR).parent / filename
+    
+    # Build markdown content
+    user_query = ""
+    for msg in conversation.get("messages", []):
+        if msg.get("role") == "user":
+            user_query = msg.get("content", "")
+            break
+    
+    markdown_content = f"""# {title}
+
+**Generated:** {datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")}
+
+## User Query
+
+{user_query}
+
+## Final Council Answer
+
+{final_answer}
+"""
+    
+    # Write file
+    with open(filepath, 'w', encoding='utf-8') as f:
+        f.write(markdown_content)
+    
+    print(f"[Storage] Saved final answer to: {filepath}")
+    return str(filepath)

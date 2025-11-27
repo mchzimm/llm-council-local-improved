@@ -738,15 +738,22 @@ async def _evaluate_responses_async(
 ):
     """Evaluate model responses in the background to build quality metrics."""
     if not responses:
+        print("[Metrics] No responses to evaluate")
         return
     
+    response_models = [r["model"] for r in responses]
+    
     # Get evaluator model: highest rated or random from council
-    evaluator = get_highest_rated_model(exclude_models=[r["model"] for r in responses])
+    evaluator = get_highest_rated_model(exclude_models=response_models)
     if not evaluator:
+        # Use a random council model (can be one of the response models if needed)
         evaluator = get_random_model(COUNCIL_MODELS)
     
     if not evaluator:
+        print("[Metrics] No evaluator model available")
         return
+    
+    print(f"[Metrics] Using {evaluator} to evaluate {len(responses)} responses")
     
     for response in responses:
         try:
@@ -759,7 +766,7 @@ async def _evaluate_responses_async(
             )
         except Exception as e:
             # Don't let evaluation errors affect main flow
-            print(f"Evaluation error for {response['model']}: {e}")
+            print(f"[Metrics] Evaluation error for {response['model']}: {e}")
 
 
 async def _evaluate_single_response(
@@ -770,13 +777,16 @@ async def _evaluate_single_response(
     on_event: Callable[[str, Dict[str, Any]], None]
 ):
     """Evaluate a single response and record metrics."""
+    import json
+    import re
+    
     evaluation_prompt = f"""Evaluate the following response to a user query. 
 Rate each category from 1-5 (1=poor, 5=excellent).
 
 User Query: {user_query}
 
 Response to evaluate:
-{response_text[:2000]}  # Limit to avoid token overflow
+{response_text[:2000]}
 
 Rate the response on these categories:
 1. VERBOSITY (1=too brief/too verbose, 5=perfectly balanced)
@@ -791,13 +801,12 @@ Respond ONLY with a JSON object in this exact format:
     messages = [{"role": "user", "content": evaluation_prompt}]
     
     try:
+        print(f"[Metrics] Evaluating {model_id} using {evaluator_model}...")
         result = await query_model_with_retry(evaluator_model, messages, timeout=30.0)
         if result and result.get("content"):
-            # Parse the evaluation
-            import json
-            import re
-            
             content = result["content"]
+            print(f"[Metrics] Got evaluation response: {content[:200]}...")
+            
             # Try to extract JSON from the response
             json_match = re.search(r'\{[^}]+\}', content)
             if json_match:
@@ -810,6 +819,7 @@ Respond ONLY with a JSON object in this exact format:
                     else:
                         scores[key] = 3  # Default middle score
                 
+                print(f"[Metrics] Recording scores for {model_id}: {scores}")
                 record_evaluation(
                     model_id,
                     verbosity=scores["verbosity"],
@@ -824,8 +834,14 @@ Respond ONLY with a JSON object in this exact format:
                     "evaluator": evaluator_model,
                     "scores": scores
                 })
+            else:
+                print(f"[Metrics] No JSON found in response for {model_id}")
+        else:
+            print(f"[Metrics] No content in evaluation response for {model_id}")
     except Exception as e:
-        print(f"Failed to evaluate {model_id}: {e}")
+        print(f"[Metrics] Failed to evaluate {model_id}: {e}")
+
+
 async def stage2_collect_rankings_streaming(
     user_query: str,
     stage1_results: List[Dict[str, Any]],

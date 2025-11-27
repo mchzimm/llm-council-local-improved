@@ -451,6 +451,16 @@ async def send_message_stream_tokens(conversation_id: str, request: SendMessageR
                 stage2_results,
                 stage3_result
             )
+            
+            # Save final answer as markdown file
+            if stage3_result and stage3_result.get("response"):
+                try:
+                    storage.save_final_answer_markdown(
+                        conversation_id, 
+                        stage3_result["response"]
+                    )
+                except Exception as md_err:
+                    print(f"[Storage] Failed to save markdown: {md_err}")
 
             yield f"data: {json.dumps({'type': 'complete'})}\n\n"
 
