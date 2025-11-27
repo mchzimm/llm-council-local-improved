@@ -219,6 +219,8 @@ function App() {
                 content: event.content,
                 isStreaming: true,
                 tokensPerSecond: event.tokens_per_second,
+                thinkingSeconds: event.thinking_seconds,
+                elapsedSeconds: event.elapsed_seconds,
               };
               return { ...prev, messages };
             });
@@ -233,6 +235,8 @@ function App() {
                 ...(lastMsg.streaming.stage1[event.model] || {}),
                 thinking: event.thinking,
                 isStreaming: true,
+                thinkingSeconds: event.thinking_seconds,
+                elapsedSeconds: event.elapsed_seconds,
               };
               return { ...prev, messages };
             });
@@ -305,6 +309,8 @@ function App() {
                 content: event.content,
                 isStreaming: true,
                 tokensPerSecond: event.tokens_per_second,
+                thinkingSeconds: event.thinking_seconds,
+                elapsedSeconds: event.elapsed_seconds,
               };
               return { ...prev, messages };
             });
@@ -319,6 +325,8 @@ function App() {
                 ...(lastMsg.streaming.stage2[event.model] || {}),
                 thinking: event.thinking,
                 isStreaming: true,
+                thinkingSeconds: event.thinking_seconds,
+                elapsedSeconds: event.elapsed_seconds,
               };
               return { ...prev, messages };
             });
@@ -366,6 +374,8 @@ function App() {
                 content: event.content,
                 isStreaming: true,
                 tokensPerSecond: event.tokens_per_second,
+                thinkingSeconds: event.thinking_seconds,
+                elapsedSeconds: event.elapsed_seconds,
               };
               return { ...prev, messages };
             });
@@ -380,6 +390,8 @@ function App() {
                 ...(lastMsg.streaming.stage3 || {}),
                 thinking: event.thinking,
                 isStreaming: true,
+                thinkingSeconds: event.thinking_seconds,
+                elapsedSeconds: event.elapsed_seconds,
               };
               return { ...prev, messages };
             });
@@ -505,6 +517,9 @@ function App() {
               ...(lastMsg.streaming.stage1[event.model] || {}),
               content: event.content,
               isStreaming: true,
+              tokensPerSecond: event.tokens_per_second,
+              thinkingSeconds: event.thinking_seconds,
+              elapsedSeconds: event.elapsed_seconds,
             };
             return { ...prev, messages };
           });
@@ -519,6 +534,8 @@ function App() {
               ...(lastMsg.streaming.stage1[event.model] || {}),
               thinking: event.thinking,
               isStreaming: true,
+              thinkingSeconds: event.thinking_seconds,
+              elapsedSeconds: event.elapsed_seconds,
             };
             return { ...prev, messages };
           });
@@ -563,6 +580,9 @@ function App() {
               ...(lastMsg.streaming.stage2[event.model] || {}),
               content: event.content,
               isStreaming: true,
+              tokensPerSecond: event.tokens_per_second,
+              thinkingSeconds: event.thinking_seconds,
+              elapsedSeconds: event.elapsed_seconds,
             };
             return { ...prev, messages };
           });
@@ -577,6 +597,8 @@ function App() {
               ...(lastMsg.streaming.stage2[event.model] || {}),
               thinking: event.thinking,
               isStreaming: true,
+              thinkingSeconds: event.thinking_seconds,
+              elapsedSeconds: event.elapsed_seconds,
             };
             return { ...prev, messages };
           });
@@ -622,6 +644,9 @@ function App() {
               ...lastMsg.streaming.stage3,
               content: event.content,
               isStreaming: true,
+              tokensPerSecond: event.tokens_per_second,
+              thinkingSeconds: event.thinking_seconds,
+              elapsedSeconds: event.elapsed_seconds,
             };
             return { ...prev, messages };
           });
@@ -636,6 +661,8 @@ function App() {
               ...lastMsg.streaming.stage3,
               thinking: event.thinking,
               isStreaming: true,
+              thinkingSeconds: event.thinking_seconds,
+              elapsedSeconds: event.elapsed_seconds,
             };
             return { ...prev, messages };
           });

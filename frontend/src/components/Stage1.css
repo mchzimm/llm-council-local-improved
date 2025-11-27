@@ -106,6 +106,25 @@
   font-size: 11px;
 }
 
+.timing-badge {
+  background: #fff3e0;
+  color: #e65100;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: monospace;
+}
+
+.timing-indicator {
+  background: #fff3e0;
+  color: #e65100;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 10px;
+  margin-left: 4px;
+  font-family: monospace;
+}
+
 .thinking-section {
   margin-bottom: 12px;
   border: 1px solid #e0e0e0;

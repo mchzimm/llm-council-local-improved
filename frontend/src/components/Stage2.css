@@ -171,6 +171,25 @@
   font-size: 11px;
 }
 
+.ranking-model .timing-badge {
+  background: #fff3e0;
+  color: #e65100;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: monospace;
+}
+
+.timing-indicator {
+  background: #fff3e0;
+  color: #e65100;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 10px;
+  margin-left: 4px;
+  font-family: monospace;
+}
+
 .ranking-content {
   color: #333;
   line-height: 1.6;

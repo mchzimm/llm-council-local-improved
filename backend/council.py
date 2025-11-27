@@ -17,11 +17,23 @@ from .model_metrics import (
 # ============== Token Tracking ==============
 
 class TokenTracker:
-    """Track tokens per second for streaming models."""
+    """Track tokens per second and timing for streaming models."""
     
     def __init__(self):
         self.start_times: Dict[str, float] = {}
+        self.thinking_end_times: Dict[str, float] = {}
         self.token_counts: Dict[str, int] = {}
+    
+    def record_thinking(self, model: str):
+        """Record that thinking is happening (start timer if not started)."""
+        now = time.time()
+        if model not in self.start_times:
+            self.start_times[model] = now
+    
+    def mark_thinking_done(self, model: str):
+        """Mark when thinking phase ends and response begins."""
+        if model not in self.thinking_end_times:
+            self.thinking_end_times[model] = time.time()
     
     def record_token(self, model: str, delta: str) -> float:
         """Record a token and return current tokens/second."""
@@ -31,6 +43,10 @@ class TokenTracker:
             self.start_times[model] = now
             self.token_counts[model] = 0
         
+        # Mark thinking as done when first response token arrives
+        if model not in self.thinking_end_times:
+            self.thinking_end_times[model] = now
+        
         # Count tokens (approximate by whitespace-separated words + 1 for partial)
         self.token_counts[model] += max(1, len(delta.split()))
         
@@ -38,6 +54,17 @@ class TokenTracker:
         if elapsed > 0:
             return round(self.token_counts[model] / elapsed, 1)
         return 0.0
+    
+    def get_timing(self, model: str) -> Dict[str, int]:
+        """Get timing info: thinking_seconds and elapsed_seconds."""
+        now = time.time()
+        start = self.start_times.get(model, now)
+        thinking_end = self.thinking_end_times.get(model)
+        
+        elapsed = int(now - start)
+        thinking = int(thinking_end - start) if thinking_end else elapsed
+        
+        return {"thinking_seconds": thinking, "elapsed_seconds": elapsed}
     
     def get_final_tps(self, model: str) -> float:
         """Get final tokens/second for a model."""
@@ -743,18 +770,23 @@ Question: {user_query}"""
             if chunk["type"] == "token":
                 content = chunk["content"]
                 tps = token_tracker.record_token(model, chunk["delta"])
+                timing = token_tracker.get_timing(model)
                 on_event("stage1_token", {
                     "model": model,
                     "delta": chunk["delta"],
                     "content": content,
-                    "tokens_per_second": tps
+                    "tokens_per_second": tps,
+                    **timing
                 })
             elif chunk["type"] == "thinking":
                 reasoning = chunk["content"]
+                token_tracker.record_thinking(model)
+                timing = token_tracker.get_timing(model)
                 on_event("stage1_thinking", {
                     "model": model,
                     "delta": chunk["delta"],
-                    "thinking": reasoning
+                    "thinking": reasoning,
+                    **timing
                 })
             elif chunk["type"] == "complete":
                 final_content = chunk["content"]
@@ -1064,20 +1096,25 @@ FINAL RANKING:
                 if chunk["type"] == "token":
                     content = chunk["content"]
                     tps = token_tracker.record_token(model, chunk["delta"])
+                    timing = token_tracker.get_timing(model)
                     on_event("stage2_token", {
                         "model": model,
                         "delta": chunk["delta"],
                         "content": content,
                         "round": round_num,
-                        "tokens_per_second": tps
+                        "tokens_per_second": tps,
+                        **timing
                     })
                 elif chunk["type"] == "thinking":
                     reasoning = chunk["content"]
+                    token_tracker.record_thinking(model)
+                    timing = token_tracker.get_timing(model)
                     on_event("stage2_thinking", {
                         "model": model,
                         "delta": chunk["delta"],
                         "thinking": reasoning,
-                        "round": round_num
+                        "round": round_num,
+                        **timing
                     })
                 elif chunk["type"] == "complete":
                     full_text = chunk["content"]
@@ -1323,18 +1360,23 @@ Provide an expertly formatted final answer that represents the council's collect
         if chunk["type"] == "token":
             content = chunk["content"]
             tps = token_tracker.record_token(model_to_use, chunk["delta"])
+            timing = token_tracker.get_timing(model_to_use)
             on_event("stage3_token", {
                 "model": model_to_use,
                 "delta": chunk["delta"],
                 "content": content,
-                "tokens_per_second": tps
+                "tokens_per_second": tps,
+                **timing
             })
         elif chunk["type"] == "thinking":
             reasoning = chunk["content"]
+            token_tracker.record_thinking(model_to_use)
+            timing = token_tracker.get_timing(model_to_use)
             on_event("stage3_thinking", {
                 "model": model_to_use,
                 "delta": chunk["delta"],
-                "thinking": reasoning
+                "thinking": reasoning,
+                **timing
             })
         elif chunk["type"] == "complete":
             final_content = chunk["content"]

@@ -36,6 +36,15 @@ export default function Stage2({ rankings, labelToModel, aggregateRankings, stre
   const isStreaming = streamingData?.isStreaming && !completedRanking;
   const parsedRanking = completedRanking?.parsed_ranking;
   const tokensPerSecond = streamingData?.tokensPerSecond;
+  const thinkingSeconds = streamingData?.thinkingSeconds;
+  const elapsedSeconds = streamingData?.elapsedSeconds;
+
+  // Format timing as "thinking/total"
+  const formatTiming = (thinking, elapsed) => {
+    if (elapsed === undefined) return null;
+    const t = thinking !== undefined ? thinking : elapsed;
+    return `${t}s/${elapsed}s`;
+  };
 
   return (
     <div className="stage stage2">
@@ -59,7 +68,9 @@ export default function Stage2({ rankings, labelToModel, aggregateRankings, stre
         {models.map((model, index) => {
           const modelStreaming = streaming?.[model];
           const modelComplete = rankings?.find(r => r.model === model);
-          const modelTps = modelStreaming?.tokensPerSecond;
+          const modelTiming = modelStreaming?.elapsedSeconds !== undefined 
+            ? `${modelStreaming?.thinkingSeconds ?? modelStreaming?.elapsedSeconds}s/${modelStreaming?.elapsedSeconds}s`
+            : null;
           
           return (
             <button
@@ -68,7 +79,7 @@ export default function Stage2({ rankings, labelToModel, aggregateRankings, stre
               onClick={() => setActiveTab(index)}
             >
               {model.split('/')[1] || model}
-              {modelTps && <span className="tps-indicator">{modelTps} t/s</span>}
+              {modelStreaming?.isStreaming && !modelComplete && modelTiming && <span className="timing-indicator">{modelTiming}</span>}
               {modelStreaming?.isStreaming && !modelComplete && <span className="streaming-indicator">●</span>}
             </button>
           );
@@ -78,7 +89,8 @@ export default function Stage2({ rankings, labelToModel, aggregateRankings, stre
       <div className="tab-content">
         <div className="ranking-model">
           {currentModel}
-          {tokensPerSecond && <span className="tps-badge">{tokensPerSecond} tok/s</span>}
+          {isStreaming && tokensPerSecond !== undefined && <span className="tps-badge">{tokensPerSecond.toFixed(1)} tok/s</span>}
+          {isStreaming && formatTiming(thinkingSeconds, elapsedSeconds) && <span className="timing-badge">{formatTiming(thinkingSeconds, elapsedSeconds)}</span>}
           {isStreaming && <span className="streaming-badge">Streaming...</span>}
         </div>
         

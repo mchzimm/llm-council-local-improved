@@ -8,6 +8,15 @@ export default function Stage3({ finalResponse, streaming }) {
   const isStreaming = streaming?.isStreaming && !finalResponse?.response;
   const modelName = finalResponse?.model || '';
   const tokensPerSecond = streaming?.tokensPerSecond;
+  const thinkingSeconds = streaming?.thinkingSeconds;
+  const elapsedSeconds = streaming?.elapsedSeconds;
+
+  // Format timing as "thinking/total"
+  const formatTiming = (thinking, elapsed) => {
+    if (elapsed === undefined) return null;
+    const t = thinking !== undefined ? thinking : elapsed;
+    return `${t}s/${elapsed}s`;
+  };
 
   if (!displayContent && !isStreaming) {
     return null;
@@ -19,7 +28,8 @@ export default function Stage3({ finalResponse, streaming }) {
       <div className="final-response">
         <div className="chairman-label">
           Presenter: {modelName ? (modelName.split('/')[1] || modelName) : 'Formatting...'}
-          {tokensPerSecond && <span className="tps-badge">{tokensPerSecond} tok/s</span>}
+          {isStreaming && tokensPerSecond !== undefined && <span className="tps-badge">{tokensPerSecond.toFixed(1)} tok/s</span>}
+          {isStreaming && formatTiming(thinkingSeconds, elapsedSeconds) && <span className="timing-badge">{formatTiming(thinkingSeconds, elapsedSeconds)}</span>}
           {isStreaming && <span className="streaming-badge">Streaming...</span>}
         </div>
         
