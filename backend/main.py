@@ -22,13 +22,17 @@ from .council import (
 from .title_generation import title_service
 from .model_validator import validate_models
 from .config_loader import load_config
-from .model_metrics import get_all_metrics, get_model_ranking
+from .model_metrics import get_all_metrics, get_model_ranking, cleanup_invalid_models
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage app lifespan events."""
     # Startup
     print("🚀 Starting LLM Council API...")
+    
+    # Clean up invalid models from metrics
+    print("🧹 Cleaning up invalid model entries from metrics...")
+    cleanup_invalid_models()
     
     # Validate models and connectivity
     print("🔍 Validating models and server connectivity...")

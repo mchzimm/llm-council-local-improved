@@ -169,15 +169,48 @@ def _update_rankings(metrics: Dict[str, Any]):
         metrics["models"][model_id]["rank"] = rank
 
 
-def get_highest_rated_model(exclude_models: Optional[List[str]] = None) -> Optional[str]:
+def get_valid_models() -> List[str]:
+    """Get list of valid models (council members + chairman)."""
+    from .config import COUNCIL_MODELS, CHAIRMAN_MODEL
+    valid = set(COUNCIL_MODELS)
+    if CHAIRMAN_MODEL:
+        valid.add(CHAIRMAN_MODEL)
+    return list(valid)
+
+
+def cleanup_invalid_models():
+    """Remove entries for models that are not valid council members or chairman."""
+    valid_models = set(get_valid_models())
+    metrics = load_metrics()
+    
+    invalid = [mid for mid in metrics["models"].keys() if mid not in valid_models]
+    
+    if invalid:
+        for model_id in invalid:
+            del metrics["models"][model_id]
+            print(f"[Metrics] Removed invalid model: {model_id}")
+        
+        _update_rankings(metrics)
+        save_metrics(metrics)
+        print(f"[Metrics] Cleaned up {len(invalid)} invalid model(s)")
+    
+    return invalid
+
+
+def get_highest_rated_model(exclude_models: Optional[List[str]] = None, valid_only: bool = True) -> Optional[str]:
     """Get the model with highest rating, excluding specified models."""
     metrics = load_metrics()
     exclude = set(exclude_models or [])
     
+    # Only consider valid models if requested
+    valid_models = set(get_valid_models()) if valid_only else None
+    
     candidates = [
         (mid, m["composite_rating"]) 
         for mid, m in metrics["models"].items()
-        if mid not in exclude and m["composite_rating"] > 0
+        if mid not in exclude 
+        and m["composite_rating"] > 0
+        and (valid_models is None or mid in valid_models)
     ]
     
     if not candidates:
@@ -185,6 +218,25 @@ def get_highest_rated_model(exclude_models: Optional[List[str]] = None) -> Optio
     
     candidates.sort(key=lambda x: x[1], reverse=True)
     return candidates[0][0]
+
+
+def get_evaluator_for_model(target_model: str) -> Optional[str]:
+    """
+    Get the best evaluator model for a target model.
+    Never returns the target model itself.
+    If target is highest rated, returns second highest.
+    """
+    valid_models = get_valid_models()
+    
+    # Get highest rated that isn't the target
+    evaluator = get_highest_rated_model(exclude_models=[target_model], valid_only=True)
+    
+    if evaluator:
+        return evaluator
+    
+    # Fallback: random valid model that isn't the target
+    candidates = [m for m in valid_models if m != target_model]
+    return random.choice(candidates) if candidates else None
 
 
 def get_random_model(model_list: List[str], exclude_model: Optional[str] = None) -> Optional[str]:

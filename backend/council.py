@@ -8,8 +8,8 @@ from .config_loader import get_deliberation_rounds, get_deliberation_config, get
 from .model_metrics import (
     record_query_result, 
     record_evaluation, 
-    get_highest_rated_model, 
-    get_random_model
+    get_evaluator_for_model,
+    get_valid_models
 )
 
 
@@ -741,32 +741,30 @@ async def _evaluate_responses_async(
         print("[Metrics] No responses to evaluate")
         return
     
-    response_models = [r["model"] for r in responses]
-    
-    # Get evaluator model: highest rated or random from council
-    evaluator = get_highest_rated_model(exclude_models=response_models)
-    if not evaluator:
-        # Use a random council model (can be one of the response models if needed)
-        evaluator = get_random_model(COUNCIL_MODELS)
-    
-    if not evaluator:
-        print("[Metrics] No evaluator model available")
-        return
-    
-    print(f"[Metrics] Using {evaluator} to evaluate {len(responses)} responses")
+    print(f"[Metrics] Evaluating {len(responses)} responses")
     
     for response in responses:
+        target_model = response["model"]
+        
+        # Get best evaluator for this specific target (never same as target)
+        evaluator = get_evaluator_for_model(target_model)
+        
+        if not evaluator:
+            print(f"[Metrics] No evaluator available for {target_model}")
+            continue
+        
         try:
+            print(f"[Metrics] Using {evaluator} to evaluate {target_model}")
             await _evaluate_single_response(
                 user_query, 
-                response["model"], 
+                target_model, 
                 response["response"],
                 evaluator,
                 on_event
             )
         except Exception as e:
             # Don't let evaluation errors affect main flow
-            print(f"[Metrics] Evaluation error for {response['model']}: {e}")
+            print(f"[Metrics] Evaluation error for {target_model}: {e}")
 
 
 async def _evaluate_single_response(
