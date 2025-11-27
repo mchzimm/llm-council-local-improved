@@ -29,6 +29,7 @@
   cursor: pointer;
   font-size: 14px;
   transition: all 0.2s;
+  position: relative;
 }
 
 .tab:hover {
@@ -45,6 +46,21 @@
   font-weight: 600;
 }
 
+.tab.streaming {
+  border-color: #28a745;
+}
+
+.tab .streaming-indicator {
+  margin-left: 6px;
+  color: #28a745;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 .tab-content {
   background: #ffffff;
   padding: 16px;
@@ -57,9 +73,56 @@
   font-size: 12px;
   margin-bottom: 12px;
   font-family: monospace;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.streaming-badge {
+  background: #28a745;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  animation: pulse 1s infinite;
+}
+
+.thinking-section {
+  margin-bottom: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background: #f8f9fa;
+}
+
+.thinking-section summary {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: 500;
+  color: #666;
+}
+
+.thinking-section .thinking-content {
+  padding: 12px;
+  font-family: monospace;
+  font-size: 13px;
+  white-space: pre-wrap;
+  color: #555;
+  max-height: 200px;
+  overflow-y: auto;
+  border-top: 1px solid #e0e0e0;
 }
 
 .response-text {
   color: #333;
   line-height: 1.6;
+}
+
+.cursor-blink {
+  animation: blink 1s step-end infinite;
+  color: #4a90e2;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }

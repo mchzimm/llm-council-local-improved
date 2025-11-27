@@ -172,6 +172,7 @@ function App() {
       }));
 
       // Create a partial assistant message that will be updated progressively
+      // Now includes streaming state for token-level updates
       const assistantMessage = {
         role: 'assistant',
         stage1: null,
@@ -183,6 +184,11 @@ function App() {
           stage2: false,
           stage3: false,
         },
+        streaming: {
+          stage1: {},  // model -> { content, thinking, isStreaming }
+          stage2: {},
+          stage3: { content: '', thinking: '', isStreaming: false },
+        },
       };
 
       // Add the partial assistant message
@@ -191,14 +197,53 @@ function App() {
         messages: [...prev.messages, assistantMessage],
       }));
 
-      // Send message with streaming
-      await api.sendMessageStream(currentConversationId, content, (eventType, event) => {
+      // Send message with token-level streaming
+      await api.sendMessageStreamTokens(currentConversationId, content, (eventType, event) => {
         switch (eventType) {
           case 'stage1_start':
             setCurrentConversation((prev) => {
               const messages = [...prev.messages];
               const lastMsg = messages[messages.length - 1];
               lastMsg.loading.stage1 = true;
+              return { ...prev, messages };
+            });
+            break;
+
+          case 'stage1_token':
+            setCurrentConversation((prev) => {
+              const messages = [...prev.messages];
+              const lastMsg = messages[messages.length - 1];
+              if (!lastMsg.streaming) lastMsg.streaming = { stage1: {}, stage2: {}, stage3: {} };
+              lastMsg.streaming.stage1[event.model] = {
+                ...(lastMsg.streaming.stage1[event.model] || {}),
+                content: event.content,
+                isStreaming: true,
+              };
+              return { ...prev, messages };
+            });
+            break;
+
+          case 'stage1_thinking':
+            setCurrentConversation((prev) => {
+              const messages = [...prev.messages];
+              const lastMsg = messages[messages.length - 1];
+              if (!lastMsg.streaming) lastMsg.streaming = { stage1: {}, stage2: {}, stage3: {} };
+              lastMsg.streaming.stage1[event.model] = {
+                ...(lastMsg.streaming.stage1[event.model] || {}),
+                thinking: event.thinking,
+                isStreaming: true,
+              };
+              return { ...prev, messages };
+            });
+            break;
+
+          case 'stage1_model_complete':
+            setCurrentConversation((prev) => {
+              const messages = [...prev.messages];
+              const lastMsg = messages[messages.length - 1];
+              if (lastMsg.streaming?.stage1?.[event.model]) {
+                lastMsg.streaming.stage1[event.model].isStreaming = false;
+              }
               return { ...prev, messages };
             });
             break;
@@ -218,6 +263,45 @@ function App() {
               const messages = [...prev.messages];
               const lastMsg = messages[messages.length - 1];
               lastMsg.loading.stage2 = true;
+              return { ...prev, messages };
+            });
+            break;
+
+          case 'stage2_token':
+            setCurrentConversation((prev) => {
+              const messages = [...prev.messages];
+              const lastMsg = messages[messages.length - 1];
+              if (!lastMsg.streaming) lastMsg.streaming = { stage1: {}, stage2: {}, stage3: {} };
+              lastMsg.streaming.stage2[event.model] = {
+                ...(lastMsg.streaming.stage2[event.model] || {}),
+                content: event.content,
+                isStreaming: true,
+              };
+              return { ...prev, messages };
+            });
+            break;
+
+          case 'stage2_thinking':
+            setCurrentConversation((prev) => {
+              const messages = [...prev.messages];
+              const lastMsg = messages[messages.length - 1];
+              if (!lastMsg.streaming) lastMsg.streaming = { stage1: {}, stage2: {}, stage3: {} };
+              lastMsg.streaming.stage2[event.model] = {
+                ...(lastMsg.streaming.stage2[event.model] || {}),
+                thinking: event.thinking,
+                isStreaming: true,
+              };
+              return { ...prev, messages };
+            });
+            break;
+
+          case 'stage2_model_complete':
+            setCurrentConversation((prev) => {
+              const messages = [...prev.messages];
+              const lastMsg = messages[messages.length - 1];
+              if (lastMsg.streaming?.stage2?.[event.model]) {
+                lastMsg.streaming.stage2[event.model].isStreaming = false;
+              }
               return { ...prev, messages };
             });
             break;
@@ -242,19 +326,54 @@ function App() {
             });
             break;
 
+          case 'stage3_token':
+            setCurrentConversation((prev) => {
+              const messages = [...prev.messages];
+              const lastMsg = messages[messages.length - 1];
+              if (!lastMsg.streaming) lastMsg.streaming = { stage1: {}, stage2: {}, stage3: {} };
+              lastMsg.streaming.stage3 = {
+                ...(lastMsg.streaming.stage3 || {}),
+                content: event.content,
+                isStreaming: true,
+              };
+              return { ...prev, messages };
+            });
+            break;
+
+          case 'stage3_thinking':
+            setCurrentConversation((prev) => {
+              const messages = [...prev.messages];
+              const lastMsg = messages[messages.length - 1];
+              if (!lastMsg.streaming) lastMsg.streaming = { stage1: {}, stage2: {}, stage3: {} };
+              lastMsg.streaming.stage3 = {
+                ...(lastMsg.streaming.stage3 || {}),
+                thinking: event.thinking,
+                isStreaming: true,
+              };
+              return { ...prev, messages };
+            });
+            break;
+
           case 'stage3_complete':
             setCurrentConversation((prev) => {
               const messages = [...prev.messages];
               const lastMsg = messages[messages.length - 1];
               lastMsg.stage3 = event.data;
               lastMsg.loading.stage3 = false;
+              if (lastMsg.streaming?.stage3) {
+                lastMsg.streaming.stage3.isStreaming = false;
+              }
               return { ...prev, messages };
             });
             break;
 
           case 'title_complete':
-            // Reload conversations to get updated title
-            loadConversations();
+            // Update conversation title in list
+            setConversations(prev => prev.map(conv => 
+              conv.id === currentConversationId 
+                ? { ...conv, title: event.title }
+                : conv
+            ));
             break;
 
           case 'complete':
@@ -269,7 +388,8 @@ function App() {
             break;
 
           default:
-            console.log('Unknown event type:', eventType);
+            // Silently ignore unknown event types
+            break;
         }
       });
     } catch (error) {

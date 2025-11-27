@@ -51,6 +51,14 @@
     "enable_cross_review": true,
     "refinement_prompt_template": "default"
   },
+  "response_config": {
+    "response_style": "concise",
+    "max_tokens": {
+      "stage1": 1024,
+      "stage2": 800,
+      "stage3": 1500
+    }
+  },
   "title_generation": {
     "enabled": true,
     "max_concurrent": 2,
@@ -68,8 +76,8 @@
     "connection_timeout": 10
   },
   "metadata": {
-    "version": "2.2",
-    "updated": "2025-11-26T12:10:33.579Z",
-    "changes": "Added per-model connection configuration support"
+    "version": "2.3",
+    "updated": "2025-11-27T00:46:00.114Z",
+    "changes": "Added response_config for brevity settings and max_tokens"
   }
 }

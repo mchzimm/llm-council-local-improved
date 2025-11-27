@@ -294,6 +294,22 @@ def get_model_connection_info(model_id: str) -> Dict[str, str]:
     
     # Fallback to server defaults if model not found
     return resolve_model_connection_params({}, server_config)
+
+
+def get_response_config() -> Dict[str, Any]:
+    """Get response configuration for brevity and max_tokens settings."""
+    config = load_config()
+    return config.get("response_config", {
+        "response_style": "standard",
+        "max_tokens": {
+            "stage1": None,
+            "stage2": None,
+            "stage3": None
+        }
+    })
+
+
+def get_model_info(model_id: str) -> Dict[str, Any]:
     """Get detailed information about a specific model."""
     config = load_config()
     models = config["models"]

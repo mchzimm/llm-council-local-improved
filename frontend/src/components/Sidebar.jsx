@@ -115,6 +115,7 @@ export default function Sidebar({
                       conv.id === currentConversationId ? 'active' : ''
                     } ${isGeneratingTitle ? 'generating-title' : ''}`}
                     onClick={() => onSelectConversation(conv.id)}
+                    title={conv.title || 'New Conversation'}
                   >
                     <div className="conversation-content">
                       <div className="conversation-title">

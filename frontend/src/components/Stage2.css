@@ -87,6 +87,7 @@
   cursor: pointer;
   font-size: 14px;
   transition: all 0.2s;
+  position: relative;
 }
 
 .stage2 .tab:hover {
@@ -103,6 +104,16 @@
   font-weight: 600;
 }
 
+.stage2 .tab.streaming {
+  border-color: #28a745;
+}
+
+.stage2 .tab .streaming-indicator {
+  margin-left: 6px;
+  color: #28a745;
+  animation: pulse 1s infinite;
+}
+
 .stage2 .tab-content {
   background: #ffffff;
   padding: 16px;
@@ -116,6 +127,9 @@
   font-size: 12px;
   font-family: monospace;
   margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .ranking-content {
@@ -150,4 +164,29 @@
 .rank-count {
   color: #999;
   font-size: 12px;
+}
+
+.stage2 .thinking-section {
+  margin-bottom: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background: #f8f9fa;
+}
+
+.stage2 .thinking-section summary {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: 500;
+  color: #666;
+}
+
+.stage2 .thinking-section .thinking-content {
+  padding: 12px;
+  font-family: monospace;
+  font-size: 13px;
+  white-space: pre-wrap;
+  color: #555;
+  max-height: 200px;
+  overflow-y: auto;
+  border-top: 1px solid #e0e0e0;
 }

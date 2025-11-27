@@ -1,11 +1,16 @@
 # OpenSpec Instructions
 
-**NOTE: *REMEMBER TO ALWAYS follow the versioning process* defined in `/AGENTS.md` when implementing changes.**
+**⚠️ VERSIONING REQUIRED: Before implementing ANY OpenSpec proposal:**
+1. Check current version: `git branch -a | grep "v[0-9]"`
+2. Create new version branch: `git checkout -b v<next-version>`
+3. Then implement changes on that branch
+4. See `/AGENTS.md` "Versioning Process" section for full details.
 
 Instructions for AI coding assistants using OpenSpec for spec-driven development.
 
 ## TL;DR Quick Checklist
 
+- **FIRST: Create version branch before coding** (see versioning note above)
 - Search existing work: `openspec spec list --long`, `openspec list` (use `rg` only for full-text search)
 - Decide scope: new capability vs modify existing capability
 - Pick a unique `change-id`: kebab-case, verb-led (`add-`, `update-`, `remove-`, `refactor-`)
@@ -50,13 +55,15 @@ Skip proposal for:
 
 ### Stage 2: Implementing Changes
 Track these steps as TODOs and complete them one by one.
-1. **Read proposal.md** - Understand what's being built
-2. **Read design.md** (if exists) - Review technical decisions
-3. **Read tasks.md** - Get implementation checklist
-4. **Implement tasks sequentially** - Complete in order
-5. **Confirm completion** - Ensure every item in `tasks.md` is finished before updating statuses
-6. **Update checklist** - After all work is done, set every task to `- [x]` so the list reflects reality
-7. **Approval gate** - Do not start implementation until the proposal is reviewed and approved
+1. **Create version branch FIRST** - `git checkout -b v<next-version>` (see `/AGENTS.md` Versioning Process)
+2. **Read proposal.md** - Understand what's being built
+3. **Read design.md** (if exists) - Review technical decisions
+4. **Read tasks.md** - Get implementation checklist
+5. **Implement tasks sequentially** - Complete in order
+6. **Confirm completion** - Ensure every item in `tasks.md` is finished before updating statuses
+7. **Update checklist** - After all work is done, set every task to `- [x]` so the list reflects reality
+8. **Commit and push** - `git add -A && git commit -m "v<version>: <description>" && git push -u origin v<version>`
+9. **Approval gate** - Do not merge to master until the proposal is reviewed and approved
 
 ### Stage 3: Archiving Changes
 After deployment, create separate PR to:

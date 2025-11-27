@@ -3,7 +3,8 @@
 import httpx
 import asyncio
 import time
-from typing import List, Dict, Any, Optional
+import json
+from typing import List, Dict, Any, Optional, AsyncGenerator, Callable
 from .config_loader import get_model_connection_info, load_config
 
 
@@ -77,7 +78,8 @@ async def query_model(
     model: str,
     messages: List[Dict[str, str]],
     timeout: float = 30.0,
-    connection_timeout: float = 10.0
+    connection_timeout: float = 10.0,
+    max_tokens: Optional[int] = None
 ) -> Optional[Dict[str, Any]]:
     """
     Query a single model via LM Studio API.
@@ -87,6 +89,7 @@ async def query_model(
         messages: List of message dicts with 'role' and 'content'
         timeout: Request timeout in seconds
         connection_timeout: Connection timeout in seconds
+        max_tokens: Maximum tokens to generate (optional, uses model default if None)
 
     Returns:
         Response dict with 'content' and optional 'reasoning_details', or None if failed
@@ -108,6 +111,10 @@ async def query_model(
         "model": model,
         "messages": messages,
     }
+    
+    # Add max_tokens if specified
+    if max_tokens:
+        payload["max_tokens"] = max_tokens
 
     try:
         # Use separate timeouts for connection and read
@@ -188,3 +195,118 @@ async def query_models_parallel(
             result[model] = response
     
     return result
+
+
+async def query_model_streaming(
+    model: str,
+    messages: List[Dict[str, str]],
+    timeout: float = 300.0,
+    connection_timeout: float = 10.0,
+    on_token: Optional[Callable[[str, str, Optional[str]], None]] = None,
+    max_tokens: Optional[int] = None
+) -> AsyncGenerator[Dict[str, Any], None]:
+    """
+    Query a model with streaming enabled, yielding tokens as they arrive.
+
+    Args:
+        model: LM Studio model identifier
+        messages: List of message dicts with 'role' and 'content'
+        timeout: Request timeout in seconds
+        connection_timeout: Connection timeout in seconds
+        on_token: Optional callback (token, token_type, content_so_far) called for each token
+        max_tokens: Maximum tokens to generate (optional)
+
+    Yields:
+        Dict with 'type' ('token', 'thinking', 'complete') and 'content' or 'delta'
+    """
+    connection_info = get_model_connection_info(model)
+    api_endpoint = connection_info["api_endpoint"]
+    api_key = connection_info["api_key"]
+    
+    headers = {"Content-Type": "application/json"}
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+
+    payload = {
+        "model": model,
+        "messages": messages,
+        "stream": True,
+    }
+    
+    if max_tokens:
+        payload["max_tokens"] = max_tokens
+
+    content_buffer = ""
+    reasoning_buffer = ""
+
+    try:
+        timeout_config = httpx.Timeout(
+            connect=connection_timeout,
+            read=timeout,
+            write=timeout,
+            pool=timeout
+        )
+        
+        async with httpx.AsyncClient(timeout=timeout_config) as client:
+            async with client.stream(
+                "POST",
+                api_endpoint,
+                headers=headers,
+                json=payload
+            ) as response:
+                response.raise_for_status()
+                
+                async for line in response.aiter_lines():
+                    if not line or not line.startswith("data: "):
+                        continue
+                    
+                    data_str = line[6:]  # Remove "data: " prefix
+                    if data_str == "[DONE]":
+                        break
+                    
+                    try:
+                        data = json.loads(data_str)
+                        delta = data.get("choices", [{}])[0].get("delta", {})
+                        
+                        # Check for reasoning content (thinking models)
+                        reasoning_delta = delta.get("reasoning_content", "")
+                        if reasoning_delta:
+                            reasoning_buffer += reasoning_delta
+                            if on_token:
+                                on_token(reasoning_delta, "thinking", reasoning_buffer)
+                            yield {
+                                "type": "thinking",
+                                "delta": reasoning_delta,
+                                "content": reasoning_buffer
+                            }
+                        
+                        # Regular content
+                        content_delta = delta.get("content", "")
+                        if content_delta:
+                            content_buffer += content_delta
+                            if on_token:
+                                on_token(content_delta, "token", content_buffer)
+                            yield {
+                                "type": "token",
+                                "delta": content_delta,
+                                "content": content_buffer
+                            }
+                    
+                    except json.JSONDecodeError:
+                        continue
+        
+        # Yield final complete message
+        yield {
+            "type": "complete",
+            "content": content_buffer,
+            "reasoning_content": reasoning_buffer
+        }
+
+    except Exception as e:
+        print(f"Streaming error for model {model}: {e}")
+        yield {
+            "type": "error",
+            "error": str(e),
+            "content": content_buffer,
+            "reasoning_content": reasoning_buffer
+        }

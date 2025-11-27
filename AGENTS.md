@@ -19,6 +19,8 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 # CLAUDE.md - Technical Notes for LLM Council
 
+**⚠️ BEFORE IMPLEMENTING ANY CHANGES: See "Versioning Process" section below. Create a version branch FIRST.**
+
 This file contains technical details, architectural decisions, and important implementation notes for future development sessions.
 
 ## Project Overview
@@ -159,6 +161,8 @@ Models are now configured via `models.json` file instead of hardcoded values in 
 
 ## Versioning Process
 
+**CRITICAL: Follow this process BEFORE implementing any OpenSpec proposal or code change.**
+
 The project follows semantic versioning with the format `<release>.<feature>.<fix>`:
 
 ### Version Number Rules
@@ -166,16 +170,45 @@ The project follows semantic versioning with the format `<release>.<feature>.<fi
 - **Feature** (0.x.0): Increment whenever a new feature is implemented
 - **Fix** (0.0.x): Increment with every bug fix being implemented
 
-### Workflow
-1. Check existing branches to determine current version
-2. Start versioning with 0.0.1 if no version branch exists
-3. Increment appropriate version number based on change type
-4. Create new branch with version number (e.g., `v0.1.0`)
-5. Implement changes and commit to the version branch
-6. Merge to master when complete
+### Mandatory Workflow (Follow These Steps In Order)
+
+**Step 1: Determine Next Version**
+```bash
+git branch -a | grep "v[0-9]"  # List version branches
+```
+- If implementing features: increment middle number (e.g., v0.3.0 → v0.4.0)
+- If fixing bugs: increment last number (e.g., v0.3.0 → v0.3.1)
+- Multiple features in one session: use single feature increment
+
+**Step 2: Create Version Branch BEFORE Coding**
+```bash
+git checkout -b v<new-version>  # e.g., git checkout -b v0.4.0
+```
+
+**Step 3: Implement Changes**
+- Make all code changes on the version branch
+- Keep changes focused on the proposal scope
+
+**Step 4: Commit Changes**
+```bash
+git add -A
+git commit -m "v<version>: <brief description of changes>"
+```
+
+**Step 5: Push Branch to Remote**
+```bash
+git push -u origin v<new-version>
+```
+
+**Step 6: Merge to Master (when approved)**
+```bash
+git checkout master
+git merge v<new-version>
+git push origin master
+```
 
 ### Branch Naming Convention
-Version branches should be named: `v<release>.<feature>.<fix>` (e.g., `v0.1.0`, `v1.2.3`)
+Version branches: `v<release>.<feature>.<fix>` (e.g., `v0.1.0`, `v1.2.3`)
 
 ## Future Enhancement Ideas
 

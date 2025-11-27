@@ -1,9 +1,9 @@
 """3-stage LLM Council orchestration with multi-round deliberation."""
 
-from typing import List, Dict, Any, Tuple
-from .lmstudio import query_models_parallel, query_model_with_retry
+from typing import List, Dict, Any, Tuple, AsyncGenerator, Callable, Optional
+from .lmstudio import query_models_parallel, query_model_with_retry, query_model_streaming
 from .config import COUNCIL_MODELS, CHAIRMAN_MODEL
-from .config_loader import get_deliberation_rounds, get_deliberation_config
+from .config_loader import get_deliberation_rounds, get_deliberation_config, get_response_config
 
 
 async def stage1_collect_responses(user_query: str) -> List[Dict[str, Any]]:
@@ -595,4 +595,324 @@ Provide a clear, well-reasoned final answer that represents the council's collec
         "model": CHAIRMAN_MODEL,
         "response": response.get('content', ''),
         "synthesis_type": "multi_round_enhanced"
+    }
+
+
+# ============== Streaming Functions ==============
+
+async def stage1_collect_responses_streaming(
+    user_query: str,
+    on_event: Callable[[str, Dict[str, Any]], None]
+) -> List[Dict[str, Any]]:
+    """
+    Stage 1 with streaming: Collect individual responses from all council models.
+    Streams tokens as they arrive from each model.
+
+    Args:
+        user_query: The user's question
+        on_event: Callback for streaming events (event_type, data)
+
+    Returns:
+        List of dicts with 'model' and 'response' keys
+    """
+    import asyncio
+    
+    # Get response config for max_tokens
+    response_config = get_response_config()
+    max_tokens = response_config.get("max_tokens", {}).get("stage1")
+    
+    # Build concise prompt if configured
+    response_style = response_config.get("response_style", "standard")
+    if response_style == "concise":
+        prompt = f"""Answer the following question concisely and directly. Be clear and informative, but avoid unnecessary verbosity. Aim for 2-3 focused paragraphs.
+
+Question: {user_query}"""
+    else:
+        prompt = user_query
+    
+    messages = [{"role": "user", "content": prompt}]
+    stage1_results = []
+    
+    async def stream_model(model: str):
+        """Stream a single model's response."""
+        content = ""
+        reasoning = ""
+        
+        async for chunk in query_model_streaming(model, messages, max_tokens=max_tokens):
+            if chunk["type"] == "token":
+                content = chunk["content"]
+                on_event("stage1_token", {
+                    "model": model,
+                    "delta": chunk["delta"],
+                    "content": content
+                })
+            elif chunk["type"] == "thinking":
+                reasoning = chunk["content"]
+                on_event("stage1_thinking", {
+                    "model": model,
+                    "delta": chunk["delta"],
+                    "thinking": reasoning
+                })
+            elif chunk["type"] == "complete":
+                on_event("stage1_model_complete", {
+                    "model": model,
+                    "content": chunk["content"],
+                    "reasoning_content": chunk.get("reasoning_content", "")
+                })
+                return {
+                    "model": model,
+                    "response": chunk["content"]
+                }
+            elif chunk["type"] == "error":
+                on_event("stage1_model_error", {
+                    "model": model,
+                    "error": chunk["error"]
+                })
+                return None
+        
+        return {"model": model, "response": content} if content else None
+    
+    # Run all models in parallel with streaming
+    tasks = [stream_model(model) for model in COUNCIL_MODELS]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    
+    for result in results:
+        if result and not isinstance(result, Exception):
+            stage1_results.append(result)
+    
+    return stage1_results
+
+
+async def stage2_collect_rankings_streaming(
+    user_query: str,
+    stage1_results: List[Dict[str, Any]],
+    on_event: Callable[[str, Dict[str, Any]], None]
+) -> Tuple[List[Dict[str, Any]], Dict[str, str]]:
+    """
+    Stage 2 with streaming: Collect rankings from all council models.
+
+    Args:
+        user_query: The original user query
+        stage1_results: Results from Stage 1
+        on_event: Callback for streaming events
+
+    Returns:
+        Tuple of (rankings_list, label_to_model mapping)
+    """
+    import asyncio
+    
+    # Get response config for max_tokens
+    response_config = get_response_config()
+    max_tokens = response_config.get("max_tokens", {}).get("stage2")
+    response_style = response_config.get("response_style", "standard")
+    
+    # Create anonymized labels
+    labels = [chr(65 + i) for i in range(len(stage1_results))]
+    label_to_model = {
+        f"Response {label}": result['model']
+        for label, result in zip(labels, stage1_results)
+    }
+    
+    # Build ranking prompt - concise version if configured
+    responses_text = "\n\n".join([
+        f"Response {label}:\n{result['response']}"
+        for label, result in zip(labels, stage1_results)
+    ])
+    
+    if response_style == "concise":
+        ranking_prompt = f"""Evaluate these responses to: "{user_query}"
+
+{responses_text}
+
+Briefly assess each response (1-2 sentences each), then provide:
+
+FINAL RANKING:
+1. Response X
+2. Response Y
+(etc.)"""
+    else:
+        ranking_prompt = f"""You are evaluating different responses to the following question:
+
+Question: {user_query}
+
+Here are the responses from different models (anonymized):
+
+{responses_text}
+
+Your task:
+1. First, evaluate each response individually. For each response, explain what it does well and what it does poorly.
+2. Then, at the very end of your response, provide a final ranking.
+
+IMPORTANT: Your final ranking MUST be formatted EXACTLY as follows:
+- Start with the line "FINAL RANKING:" (all caps, with colon)
+- Then list the responses from best to worst as a numbered list
+- Each line should be: number, period, space, then ONLY the response label (e.g., "1. Response A")
+- Do not add any other text or explanations in the ranking section
+
+Now provide your evaluation and ranking:"""
+
+    messages = [{"role": "user", "content": ranking_prompt}]
+    stage2_results = []
+    
+    async def stream_ranking(model: str):
+        """Stream a single model's ranking."""
+        content = ""
+        reasoning = ""
+        
+        async for chunk in query_model_streaming(model, messages, max_tokens=max_tokens):
+            if chunk["type"] == "token":
+                content = chunk["content"]
+                on_event("stage2_token", {
+                    "model": model,
+                    "delta": chunk["delta"],
+                    "content": content
+                })
+            elif chunk["type"] == "thinking":
+                reasoning = chunk["content"]
+                on_event("stage2_thinking", {
+                    "model": model,
+                    "delta": chunk["delta"],
+                    "thinking": reasoning
+                })
+            elif chunk["type"] == "complete":
+                full_text = chunk["content"]
+                parsed = parse_ranking_from_text(full_text)
+                on_event("stage2_model_complete", {
+                    "model": model,
+                    "ranking": full_text,
+                    "parsed_ranking": parsed
+                })
+                return {
+                    "model": model,
+                    "ranking": full_text,
+                    "parsed_ranking": parsed
+                }
+            elif chunk["type"] == "error":
+                on_event("stage2_model_error", {
+                    "model": model,
+                    "error": chunk["error"]
+                })
+                return None
+        
+        if content:
+            parsed = parse_ranking_from_text(content)
+            return {"model": model, "ranking": content, "parsed_ranking": parsed}
+        return None
+    
+    tasks = [stream_ranking(model) for model in COUNCIL_MODELS]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    
+    for result in results:
+        if result and not isinstance(result, Exception):
+            stage2_results.append(result)
+    
+    return stage2_results, label_to_model
+
+
+async def stage3_synthesize_streaming(
+    user_query: str,
+    stage1_results: List[Dict[str, Any]],
+    stage2_results: List[Dict[str, Any]],
+    on_event: Callable[[str, Dict[str, Any]], None]
+) -> Dict[str, Any]:
+    """
+    Stage 3 with streaming: Chairman synthesizes final response.
+
+    Args:
+        user_query: The original user query
+        stage1_results: Individual model responses from Stage 1
+        stage2_results: Rankings from Stage 2
+        on_event: Callback for streaming events
+
+    Returns:
+        Dict with 'model' and 'response' keys
+    """
+    # Get response config for max_tokens
+    response_config = get_response_config()
+    max_tokens = response_config.get("max_tokens", {}).get("stage3")
+    response_style = response_config.get("response_style", "standard")
+    
+    # Build comprehensive context for chairman
+    stage1_text = "\n\n".join([
+        f"Model: {result['model']}\nResponse: {result['response']}"
+        for result in stage1_results
+    ])
+
+    stage2_text = "\n\n".join([
+        f"Model: {result['model']}\nRanking: {result['ranking']}"
+        for result in stage2_results
+    ])
+
+    if response_style == "concise":
+        chairman_prompt = f"""As Chairman, synthesize the council's responses into a clear, focused answer.
+
+Question: {user_query}
+
+Council Responses:
+{stage1_text}
+
+Rankings:
+{stage2_text}
+
+Provide a concise, well-reasoned final answer (aim for 3-4 paragraphs) that captures the council's best insights:"""
+    else:
+        chairman_prompt = f"""You are the Chairman of an LLM Council. Multiple AI models have provided responses to a user's question, and then ranked each other's responses.
+
+Original Question: {user_query}
+
+STAGE 1 - Individual Responses:
+{stage1_text}
+
+STAGE 2 - Peer Rankings:
+{stage2_text}
+
+Your task as Chairman is to synthesize all of this information into a single, comprehensive, accurate answer to the user's original question. Consider:
+- The individual responses and their insights
+- The peer rankings and what they reveal about response quality
+- Any patterns of agreement or disagreement
+
+Provide a clear, well-reasoned final answer that represents the council's collective wisdom:"""
+
+    messages = [{"role": "user", "content": chairman_prompt}]
+    content = ""
+    reasoning = ""
+    
+    async for chunk in query_model_streaming(CHAIRMAN_MODEL, messages, max_tokens=max_tokens):
+        if chunk["type"] == "token":
+            content = chunk["content"]
+            on_event("stage3_token", {
+                "model": CHAIRMAN_MODEL,
+                "delta": chunk["delta"],
+                "content": content
+            })
+        elif chunk["type"] == "thinking":
+            reasoning = chunk["content"]
+            on_event("stage3_thinking", {
+                "model": CHAIRMAN_MODEL,
+                "delta": chunk["delta"],
+                "thinking": reasoning
+            })
+        elif chunk["type"] == "complete":
+            on_event("stage3_complete", {
+                "model": CHAIRMAN_MODEL,
+                "response": chunk["content"],
+                "reasoning_content": chunk.get("reasoning_content", "")
+            })
+            return {
+                "model": CHAIRMAN_MODEL,
+                "response": chunk["content"]
+            }
+        elif chunk["type"] == "error":
+            on_event("stage3_error", {
+                "model": CHAIRMAN_MODEL,
+                "error": chunk["error"]
+            })
+            return {
+                "model": CHAIRMAN_MODEL,
+                "response": content if content else "Error: Unable to generate final synthesis."
+            }
+    
+    return {
+        "model": CHAIRMAN_MODEL,
+        "response": content if content else "Error: Unable to generate final synthesis."
     }

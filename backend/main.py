@@ -13,7 +13,12 @@ import time
 import sys
 
 from . import storage
-from .council import run_full_council, stage1_collect_responses, stage2_collect_rankings, stage3_synthesize_final, calculate_aggregate_rankings
+from .council import (
+    run_full_council, stage1_collect_responses, stage2_collect_rankings, 
+    stage3_synthesize_final, calculate_aggregate_rankings,
+    stage1_collect_responses_streaming, stage2_collect_rankings_streaming,
+    stage3_synthesize_streaming
+)
 from .title_generation import title_service
 from .model_validator import validate_models
 from .config_loader import load_config
@@ -292,6 +297,158 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
 
     return StreamingResponse(
         event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        }
+    )
+
+
+@app.post("/api/conversations/{conversation_id}/message/stream-tokens")
+async def send_message_stream_tokens(conversation_id: str, request: SendMessageRequest):
+    """
+    Send a message and stream tokens from all stages in real-time.
+    Returns Server-Sent Events for each token as it's generated.
+    """
+    # Check if conversation exists
+    conversation = storage.get_conversation(conversation_id)
+    if conversation is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    # Check if this is the first message and conversation has generic title
+    is_first_message = len(conversation["messages"]) == 0
+    current_title = conversation.get("title", "").strip()
+
+    async def token_event_generator():
+        try:
+            # Add user message
+            storage.add_user_message(conversation_id, request.content)
+
+            # Generate title first if needed
+            if is_first_message and current_title.startswith("Conversation "):
+                yield f"data: {json.dumps({'type': 'title_generation_start'})}\n\n"
+                
+                try:
+                    new_title = await title_service.generate_title(
+                        conversation_id=conversation_id,
+                        user_message=request.content,
+                        websocket_manager=None
+                    )
+                    
+                    if new_title:
+                        storage.update_conversation_title(conversation_id, new_title)
+                        yield f"data: {json.dumps({'type': 'title_complete', 'title': new_title})}\n\n"
+                    else:
+                        yield f"data: {json.dumps({'type': 'title_error', 'error': 'Failed to generate title'})}\n\n"
+                        
+                except Exception as e:
+                    print(f"Title generation error: {e}")
+                    yield f"data: {json.dumps({'type': 'title_error', 'error': str(e)})}\n\n"
+
+            # Collect events from streaming stages
+            events_queue = asyncio.Queue()
+            
+            def on_event(event_type: str, data: dict):
+                """Push events to queue for SSE streaming."""
+                events_queue.put_nowait((event_type, data))
+            
+            # Stage 1: Stream individual responses
+            yield f"data: {json.dumps({'type': 'stage1_start'})}\n\n"
+            
+            stage1_task = asyncio.create_task(
+                stage1_collect_responses_streaming(request.content, on_event)
+            )
+            
+            # Stream stage 1 events
+            stage1_results = None
+            while stage1_results is None:
+                try:
+                    event_type, data = await asyncio.wait_for(
+                        events_queue.get(), timeout=0.1
+                    )
+                    yield f"data: {json.dumps({'type': event_type, **data})}\n\n"
+                except asyncio.TimeoutError:
+                    if stage1_task.done():
+                        stage1_results = stage1_task.result()
+            
+            # Drain remaining stage1 events
+            while not events_queue.empty():
+                event_type, data = events_queue.get_nowait()
+                yield f"data: {json.dumps({'type': event_type, **data})}\n\n"
+            
+            yield f"data: {json.dumps({'type': 'stage1_complete', 'data': stage1_results})}\n\n"
+
+            # Stage 2: Stream rankings
+            yield f"data: {json.dumps({'type': 'stage2_start'})}\n\n"
+            
+            stage2_task = asyncio.create_task(
+                stage2_collect_rankings_streaming(request.content, stage1_results, on_event)
+            )
+            
+            stage2_results = None
+            label_to_model = None
+            while stage2_results is None:
+                try:
+                    event_type, data = await asyncio.wait_for(
+                        events_queue.get(), timeout=0.1
+                    )
+                    yield f"data: {json.dumps({'type': event_type, **data})}\n\n"
+                except asyncio.TimeoutError:
+                    if stage2_task.done():
+                        stage2_results, label_to_model = stage2_task.result()
+            
+            # Drain remaining stage2 events
+            while not events_queue.empty():
+                event_type, data = events_queue.get_nowait()
+                yield f"data: {json.dumps({'type': event_type, **data})}\n\n"
+            
+            aggregate_rankings = calculate_aggregate_rankings(stage2_results, label_to_model)
+            yield f"data: {json.dumps({'type': 'stage2_complete', 'data': stage2_results, 'metadata': {'label_to_model': label_to_model, 'aggregate_rankings': aggregate_rankings}})}\n\n"
+
+            # Stage 3: Stream final synthesis
+            yield f"data: {json.dumps({'type': 'stage3_start'})}\n\n"
+            
+            stage3_task = asyncio.create_task(
+                stage3_synthesize_streaming(request.content, stage1_results, stage2_results, on_event)
+            )
+            
+            stage3_result = None
+            while stage3_result is None:
+                try:
+                    event_type, data = await asyncio.wait_for(
+                        events_queue.get(), timeout=0.1
+                    )
+                    yield f"data: {json.dumps({'type': event_type, **data})}\n\n"
+                except asyncio.TimeoutError:
+                    if stage3_task.done():
+                        stage3_result = stage3_task.result()
+            
+            # Drain remaining stage3 events
+            while not events_queue.empty():
+                event_type, data = events_queue.get_nowait()
+                yield f"data: {json.dumps({'type': event_type, **data})}\n\n"
+            
+            yield f"data: {json.dumps({'type': 'stage3_complete', 'data': stage3_result})}\n\n"
+
+            # Save complete assistant message
+            storage.add_assistant_message(
+                conversation_id,
+                stage1_results,
+                stage2_results,
+                stage3_result
+            )
+
+            yield f"data: {json.dumps({'type': 'complete'})}\n\n"
+
+        except Exception as e:
+            print(f"Token stream error: {e}")
+            import traceback
+            print(f"Full traceback: {traceback.format_exc()}")
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+
+    return StreamingResponse(
+        token_event_generator(),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

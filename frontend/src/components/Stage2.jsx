@@ -14,12 +14,27 @@ function deAnonymizeText(text, labelToModel) {
   return result;
 }
 
-export default function Stage2({ rankings, labelToModel, aggregateRankings }) {
+export default function Stage2({ rankings, labelToModel, aggregateRankings, streaming }) {
   const [activeTab, setActiveTab] = useState(0);
 
-  if (!rankings || rankings.length === 0) {
+  // Get models from either completed rankings or streaming state
+  const models = rankings?.length > 0 
+    ? rankings.map(r => r.model)
+    : streaming ? Object.keys(streaming) : [];
+
+  if (models.length === 0) {
     return null;
   }
+
+  const currentModel = models[activeTab];
+  const completedRanking = rankings?.find(r => r.model === currentModel);
+  const streamingData = streaming?.[currentModel];
+  
+  // Use completed ranking if available, otherwise show streaming content
+  const displayContent = completedRanking?.ranking || streamingData?.content || '';
+  const thinkingContent = streamingData?.thinking || '';
+  const isStreaming = streamingData?.isStreaming && !completedRanking;
+  const parsedRanking = completedRanking?.parsed_ranking;
 
   return (
     <div className="stage stage2">
@@ -32,33 +47,50 @@ export default function Stage2({ rankings, labelToModel, aggregateRankings }) {
       </p>
 
       <div className="tabs">
-        {rankings.map((rank, index) => (
-          <button
-            key={index}
-            className={`tab ${activeTab === index ? 'active' : ''}`}
-            onClick={() => setActiveTab(index)}
-          >
-            {rank.model.split('/')[1] || rank.model}
-          </button>
-        ))}
+        {models.map((model, index) => {
+          const modelStreaming = streaming?.[model];
+          const modelComplete = rankings?.find(r => r.model === model);
+          
+          return (
+            <button
+              key={index}
+              className={`tab ${activeTab === index ? 'active' : ''} ${modelStreaming?.isStreaming && !modelComplete ? 'streaming' : ''}`}
+              onClick={() => setActiveTab(index)}
+            >
+              {model.split('/')[1] || model}
+              {modelStreaming?.isStreaming && !modelComplete && <span className="streaming-indicator">●</span>}
+            </button>
+          );
+        })}
       </div>
 
       <div className="tab-content">
         <div className="ranking-model">
-          {rankings[activeTab].model}
+          {currentModel}
+          {isStreaming && <span className="streaming-badge">Streaming...</span>}
         </div>
+        
+        {thinkingContent && (
+          <details className="thinking-section" open={isStreaming}>
+            <summary>Thinking</summary>
+            <div className="thinking-content">
+              {thinkingContent}
+            </div>
+          </details>
+        )}
+        
         <div className="ranking-content markdown-content">
           <ReactMarkdown>
-            {deAnonymizeText(rankings[activeTab].ranking, labelToModel)}
+            {deAnonymizeText(displayContent, labelToModel)}
           </ReactMarkdown>
+          {isStreaming && <span className="cursor-blink">▌</span>}
         </div>
 
-        {rankings[activeTab].parsed_ranking &&
-         rankings[activeTab].parsed_ranking.length > 0 && (
+        {parsedRanking && parsedRanking.length > 0 && (
           <div className="parsed-ranking">
             <strong>Extracted Ranking:</strong>
             <ol>
-              {rankings[activeTab].parsed_ranking.map((label, i) => (
+              {parsedRanking.map((label, i) => (
                 <li key={i}>
                   {labelToModel && labelToModel[label]
                     ? labelToModel[label].split('/')[1] || labelToModel[label]

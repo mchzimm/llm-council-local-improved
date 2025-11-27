@@ -16,10 +16,62 @@
   font-family: monospace;
   margin-bottom: 12px;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stage3 .streaming-badge {
+  background: #28a745;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.stage3 .thinking-section {
+  margin-bottom: 12px;
+  border: 1px solid #c8e6c8;
+  border-radius: 4px;
+  background: #f8fff8;
+}
+
+.stage3 .thinking-section summary {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: 500;
+  color: #2d8a2d;
+}
+
+.stage3 .thinking-section .thinking-content {
+  padding: 12px;
+  font-family: monospace;
+  font-size: 13px;
+  white-space: pre-wrap;
+  color: #555;
+  max-height: 200px;
+  overflow-y: auto;
+  border-top: 1px solid #c8e6c8;
 }
 
 .final-text {
   color: #333;
   line-height: 1.7;
   font-size: 15px;
+}
+
+.stage3 .cursor-blink {
+  animation: blink 1s step-end infinite;
+  color: #2d8a2d;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
