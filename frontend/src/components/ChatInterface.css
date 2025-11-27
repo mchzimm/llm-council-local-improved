@@ -161,3 +161,86 @@
   background: #ccc;
   border-color: #ccc;
 }
+
+/* Message header with actions */
+.message-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.message-actions {
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.user-message:hover .message-actions {
+  opacity: 1;
+}
+
+.action-btn {
+  background: none;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 14px;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.action-btn:hover:not(:disabled) {
+  background: #f0f0f0;
+  border-color: #4a90e2;
+  color: #4a90e2;
+}
+
+.action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.redo-btn:hover:not(:disabled) {
+  color: #28a745;
+  border-color: #28a745;
+}
+
+.edit-btn:hover:not(:disabled) {
+  color: #f0ad4e;
+  border-color: #f0ad4e;
+}
+
+/* Editing state */
+.input-form.editing {
+  background: #fff8e6;
+  border-top-color: #f0ad4e;
+}
+
+.editing-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #856404;
+}
+
+.cancel-edit-btn {
+  background: none;
+  border: 1px solid #856404;
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: #856404;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-edit-btn:hover {
+  background: #856404;
+  color: white;
+}

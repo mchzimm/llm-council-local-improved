@@ -8,9 +8,12 @@ import './ChatInterface.css';
 export default function ChatInterface({
   conversation,
   onSendMessage,
+  onRedoMessage,
+  onEditMessage,
   isLoading,
 }) {
   const [input, setInput] = useState('');
+  const [editingIndex, setEditingIndex] = useState(null);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -24,7 +27,13 @@ export default function ChatInterface({
   const handleSubmit = (e) => {
     e.preventDefault();
     if (input.trim() && !isLoading) {
-      onSendMessage(input);
+      if (editingIndex !== null) {
+        // Editing existing message
+        onEditMessage(editingIndex, input);
+        setEditingIndex(null);
+      } else {
+        onSendMessage(input);
+      }
       setInput('');
     }
   };
@@ -35,6 +44,24 @@ export default function ChatInterface({
       e.preventDefault();
       handleSubmit(e);
     }
+  };
+
+  const handleRedo = (messageIndex) => {
+    if (!isLoading && onRedoMessage) {
+      onRedoMessage(messageIndex);
+    }
+  };
+
+  const handleEdit = (messageIndex, content) => {
+    if (!isLoading) {
+      setEditingIndex(messageIndex);
+      setInput(content);
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditingIndex(null);
+    setInput('');
   };
 
   if (!conversation) {
@@ -61,7 +88,27 @@ export default function ChatInterface({
             <div key={index} className="message-group">
               {msg.role === 'user' ? (
                 <div className="user-message">
-                  <div className="message-label">You</div>
+                  <div className="message-header">
+                    <div className="message-label">You</div>
+                    <div className="message-actions">
+                      <button
+                        className="action-btn redo-btn"
+                        onClick={() => handleRedo(index)}
+                        disabled={isLoading}
+                        title="Re-run council with this message"
+                      >
+                        ↻
+                      </button>
+                      <button
+                        className="action-btn edit-btn"
+                        onClick={() => handleEdit(index, msg.content)}
+                        disabled={isLoading}
+                        title="Edit and resubmit message"
+                      >
+                        ✎
+                      </button>
+                    </div>
+                  </div>
                   <div className="message-content">
                     <div className="markdown-content">
                       <ReactMarkdown>{msg.content}</ReactMarkdown>
@@ -133,18 +180,28 @@ export default function ChatInterface({
 
       {/* Show input form when:
           1. Conversation is empty (initial state), OR
-          2. Last message is complete (has stage3 and not loading) */}
-      {(conversation.messages.length === 0 || 
+          2. Last message is complete (has stage3 and not loading), OR
+          3. Editing a message */}
+      {(editingIndex !== null || 
+        conversation.messages.length === 0 || 
         (conversation.messages.length > 0 && 
          !isLoading &&
          conversation.messages[conversation.messages.length - 1]?.role === 'assistant' &&
          conversation.messages[conversation.messages.length - 1]?.stage3)) && (
-        <form className="input-form" onSubmit={handleSubmit}>
+        <form className={`input-form ${editingIndex !== null ? 'editing' : ''}`} onSubmit={handleSubmit}>
+          {editingIndex !== null && (
+            <div className="editing-indicator">
+              <span>Editing message...</span>
+              <button type="button" className="cancel-edit-btn" onClick={cancelEdit}>Cancel</button>
+            </div>
+          )}
           <textarea
             className="message-input"
-            placeholder={conversation.messages.length === 0 
-              ? "Ask your question... (Shift+Enter for new line, Enter to send)"
-              : "Ask a follow-up question... (Shift+Enter for new line, Enter to send)"}
+            placeholder={editingIndex !== null
+              ? "Edit your message... (Shift+Enter for new line, Enter to submit)"
+              : conversation.messages.length === 0 
+                ? "Ask your question... (Shift+Enter for new line, Enter to send)"
+                : "Ask a follow-up question... (Shift+Enter for new line, Enter to send)"}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -156,7 +213,7 @@ export default function ChatInterface({
             className="send-button"
             disabled={!input.trim() || isLoading}
           >
-            Send
+            {editingIndex !== null ? 'Update' : 'Send'}
           </button>
         </form>
       )}

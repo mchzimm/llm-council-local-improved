@@ -844,7 +844,7 @@ async def stage3_synthesize_streaming(
     ])
 
     if response_style == "concise":
-        chairman_prompt = f"""As Chairman, synthesize the council's responses into a clear, focused answer.
+        chairman_prompt = f"""As Presenter, synthesize the council's responses into a well-formatted, visually rich answer.
 
 Question: {user_query}
 
@@ -854,9 +854,18 @@ Council Responses:
 Rankings:
 {stage2_text}
 
-Provide a concise, well-reasoned final answer (aim for 3-4 paragraphs) that captures the council's best insights:"""
+Present the council's best insights using rich formatting to maximize clarity and visual appeal:
+- Use **markdown tables** when comparing options, features, or data
+- Use **numbered lists** for step-by-step instructions or ranked items
+- Use **bullet points** for key takeaways or feature lists
+- Use **headers** (##, ###) to organize sections clearly
+- Use **code blocks** with syntax highlighting for any code examples
+- Use **bold** and *italic* for emphasis on key terms
+- Include ASCII diagrams or structured layouts where helpful
+
+Aim for a comprehensive yet scannable answer that makes excellent use of the display area:"""
     else:
-        chairman_prompt = f"""You are the Chairman of an LLM Council. Multiple AI models have provided responses to a user's question, and then ranked each other's responses.
+        chairman_prompt = f"""You are the Presenter of an LLM Council. Multiple AI models have provided responses to a user's question, and then ranked each other's responses.
 
 Original Question: {user_query}
 
@@ -866,12 +875,22 @@ STAGE 1 - Individual Responses:
 STAGE 2 - Peer Rankings:
 {stage2_text}
 
-Your task as Chairman is to synthesize all of this information into a single, comprehensive, accurate answer to the user's original question. Consider:
+Your task as Presenter is to synthesize all of this information into a single, expertly formatted answer. Consider:
 - The individual responses and their insights
 - The peer rankings and what they reveal about response quality
 - Any patterns of agreement or disagreement
 
-Provide a clear, well-reasoned final answer that represents the council's collective wisdom:"""
+**Formatting Requirements:**
+- Use **markdown tables** for comparisons, data, or structured information
+- Use **headers** (##, ###) to organize the response into clear sections
+- Use **numbered lists** for sequential steps or ranked items
+- Use **bullet points** for features, benefits, or key points
+- Use **code blocks** with language tags for any code examples
+- Use **bold** for key terms and *italic* for emphasis
+- Include ASCII art diagrams where they add clarity
+- Maximize use of visual structure to make the answer scannable and professional
+
+Provide an expertly formatted final answer that represents the council's collective wisdom:"""
 
     messages = [{"role": "user", "content": chairman_prompt}]
     content = ""

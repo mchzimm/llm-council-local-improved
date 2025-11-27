@@ -16,7 +16,12 @@ In a bit more detail, here is what happens when you submit a query:
 
 ## Key Features
 
-### Current Release (v0.2.0)
+### Current Release (v0.3.0)
+- **Rich Formatted Output**: Presenter generates tables, headers, code blocks, and structured markdown
+- **Redo Message**: Re-run the council process with the same question (↻ icon)
+- **Edit Message**: Modify and resubmit any user message (✎ icon)
+
+### Previous Release (v0.2.0)
 - **Follow-up Questions**: Input field appears after Final Council Answer for multi-turn conversations
 - **Formatter Model**: Optional separate LLM for formatting final answers (configurable, defaults to chairman)
 

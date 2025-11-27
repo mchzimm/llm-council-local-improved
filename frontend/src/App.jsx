@@ -403,6 +403,50 @@ function App() {
     }
   };
 
+  const handleRedoMessage = async (messageIndex) => {
+    if (!currentConversationId || isLoading) return;
+    
+    // Get the user message at the given index
+    const userMessage = currentConversation.messages[messageIndex];
+    if (!userMessage || userMessage.role !== 'user') return;
+    
+    // Remove the assistant response that follows (messageIndex + 1)
+    setCurrentConversation((prev) => ({
+      ...prev,
+      messages: prev.messages.slice(0, messageIndex + 1),
+    }));
+    
+    // Re-run the council with the same message
+    setIsLoading(true);
+    try {
+      // We need to resend the message - the backend will handle creating new response
+      await handleSendMessage(userMessage.content);
+    } catch (error) {
+      console.error('Failed to redo message:', error);
+      setIsLoading(false);
+    }
+  };
+
+  const handleEditMessage = async (messageIndex, newContent) => {
+    if (!currentConversationId || isLoading) return;
+    
+    // Update the message content and remove subsequent messages
+    setCurrentConversation((prev) => {
+      const messages = prev.messages.slice(0, messageIndex);
+      messages.push({ role: 'user', content: newContent });
+      return { ...prev, messages };
+    });
+    
+    // Re-run the council with the edited message
+    setIsLoading(true);
+    try {
+      await handleSendMessage(newContent);
+    } catch (error) {
+      console.error('Failed to edit message:', error);
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="app">
       <Sidebar
@@ -418,6 +462,8 @@ function App() {
       <ChatInterface
         conversation={currentConversation}
         onSendMessage={handleSendMessage}
+        onRedoMessage={handleRedoMessage}
+        onEditMessage={handleEditMessage}
         isLoading={isLoading}
       />
     </div>

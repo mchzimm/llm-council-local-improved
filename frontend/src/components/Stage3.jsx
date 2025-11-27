@@ -17,7 +17,7 @@ export default function Stage3({ finalResponse, streaming }) {
       <h3 className="stage-title">Stage 3: Final Council Answer</h3>
       <div className="final-response">
         <div className="chairman-label">
-          Chairman: {modelName ? (modelName.split('/')[1] || modelName) : 'Synthesizing...'}
+          Presenter: {modelName ? (modelName.split('/')[1] || modelName) : 'Formatting...'}
           {isStreaming && <span className="streaming-badge">Streaming...</span>}
         </div>
         
