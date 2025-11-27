@@ -16,7 +16,11 @@ In a bit more detail, here is what happens when you submit a query:
 
 ## Key Features
 
-### Current Release (v0.1.0)
+### Current Release (v0.2.0)
+- **Follow-up Questions**: Input field appears after Final Council Answer for multi-turn conversations
+- **Formatter Model**: Optional separate LLM for formatting final answers (configurable, defaults to chairman)
+
+### Previous Release (v0.1.0)
 - **Token-Level Streaming**: Real-time display of LLM responses as they generate
 - **Thinking Model Display**: Expandable sections showing reasoning model thought processes
 - **Reactive Responses**: Concise prompts and configurable max_tokens for faster generation

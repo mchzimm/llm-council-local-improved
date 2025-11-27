@@ -131,11 +131,20 @@ export default function ChatInterface({
         <div ref={messagesEndRef} />
       </div>
 
-      {conversation.messages.length === 0 && (
+      {/* Show input form when:
+          1. Conversation is empty (initial state), OR
+          2. Last message is complete (has stage3 and not loading) */}
+      {(conversation.messages.length === 0 || 
+        (conversation.messages.length > 0 && 
+         !isLoading &&
+         conversation.messages[conversation.messages.length - 1]?.role === 'assistant' &&
+         conversation.messages[conversation.messages.length - 1]?.stage3)) && (
         <form className="input-form" onSubmit={handleSubmit}>
           <textarea
             className="message-input"
-            placeholder="Ask your question... (Shift+Enter for new line, Enter to send)"
+            placeholder={conversation.messages.length === 0 
+              ? "Ask your question... (Shift+Enter for new line, Enter to send)"
+              : "Ask a follow-up question... (Shift+Enter for new line, Enter to send)"}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}

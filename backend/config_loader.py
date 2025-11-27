@@ -199,6 +199,16 @@ def get_chairman_model() -> str:
     config = load_config()
     return config["models"]["chairman"]["id"]
 
+def get_formatter_model() -> str:
+    """Get formatter model ID. Returns chairman model if formatter is not configured."""
+    config = load_config()
+    formatter = config["models"].get("formatter", {})
+    formatter_id = formatter.get("id", "").strip()
+    if formatter_id:
+        return formatter_id
+    # Fall back to chairman model
+    return config["models"]["chairman"]["id"]
+
 def get_deliberation_config() -> Dict[str, Any]:
     """Get deliberation configuration."""
     config = load_config()
@@ -291,6 +301,11 @@ def get_model_connection_info(model_id: str) -> Dict[str, str]:
     # Check chairman model
     if models["chairman"]["id"] == model_id:
         return resolve_model_connection_params(models["chairman"], server_config)
+    
+    # Check formatter model
+    formatter = models.get("formatter", {})
+    if formatter.get("id") == model_id:
+        return resolve_model_connection_params(formatter, server_config)
     
     # Fallback to server defaults if model not found
     return resolve_model_connection_params({}, server_config)

@@ -2,7 +2,7 @@
 
 import os
 from dotenv import load_dotenv
-from .config_loader import get_council_models, get_chairman_model, load_config
+from .config_loader import get_council_models, get_chairman_model, get_formatter_model, load_config
 
 load_dotenv()
 
@@ -16,6 +16,7 @@ LM_STUDIO_API_ENDPOINT = None  # Will be set by model validator
 # Dynamic model loading from config.json
 COUNCIL_MODELS = get_council_models()
 CHAIRMAN_MODEL = get_chairman_model()
+FORMATTER_MODEL = get_formatter_model()
 
 # Data directory for conversation storage
 DATA_DIR = "data/conversations"

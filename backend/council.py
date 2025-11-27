@@ -2,7 +2,7 @@
 
 from typing import List, Dict, Any, Tuple, AsyncGenerator, Callable, Optional
 from .lmstudio import query_models_parallel, query_model_with_retry, query_model_streaming
-from .config import COUNCIL_MODELS, CHAIRMAN_MODEL
+from .config import COUNCIL_MODELS, CHAIRMAN_MODEL, FORMATTER_MODEL
 from .config_loader import get_deliberation_rounds, get_deliberation_config, get_response_config
 
 
@@ -877,42 +877,45 @@ Provide a clear, well-reasoned final answer that represents the council's collec
     content = ""
     reasoning = ""
     
-    async for chunk in query_model_streaming(CHAIRMAN_MODEL, messages, max_tokens=max_tokens):
+    # Use formatter model (falls back to chairman if not configured)
+    model_to_use = FORMATTER_MODEL
+    
+    async for chunk in query_model_streaming(model_to_use, messages, max_tokens=max_tokens):
         if chunk["type"] == "token":
             content = chunk["content"]
             on_event("stage3_token", {
-                "model": CHAIRMAN_MODEL,
+                "model": model_to_use,
                 "delta": chunk["delta"],
                 "content": content
             })
         elif chunk["type"] == "thinking":
             reasoning = chunk["content"]
             on_event("stage3_thinking", {
-                "model": CHAIRMAN_MODEL,
+                "model": model_to_use,
                 "delta": chunk["delta"],
                 "thinking": reasoning
             })
         elif chunk["type"] == "complete":
             on_event("stage3_complete", {
-                "model": CHAIRMAN_MODEL,
+                "model": model_to_use,
                 "response": chunk["content"],
                 "reasoning_content": chunk.get("reasoning_content", "")
             })
             return {
-                "model": CHAIRMAN_MODEL,
+                "model": model_to_use,
                 "response": chunk["content"]
             }
         elif chunk["type"] == "error":
             on_event("stage3_error", {
-                "model": CHAIRMAN_MODEL,
+                "model": model_to_use,
                 "error": chunk["error"]
             })
             return {
-                "model": CHAIRMAN_MODEL,
+                "model": model_to_use,
                 "response": content if content else "Error: Unable to generate final synthesis."
             }
     
     return {
-        "model": CHAIRMAN_MODEL,
+        "model": model_to_use,
         "response": content if content else "Error: Unable to generate final synthesis."
     }

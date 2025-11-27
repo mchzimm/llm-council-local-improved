@@ -43,6 +43,15 @@
       "port": "",
       "base_url_template": "",
       "api_key": ""
+    },
+    "formatter": {
+      "id": "",
+      "name": "",
+      "description": "Optional formatter model for final answer (empty = use chairman)",
+      "ip": "",
+      "port": "",
+      "base_url_template": "",
+      "api_key": ""
     }
   },
   "deliberation": {
