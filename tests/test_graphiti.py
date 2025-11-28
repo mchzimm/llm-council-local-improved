@@ -19,6 +19,17 @@ import sys
 from typing import Dict, Any, List
 
 
+def _print_raw_json(label: str, result: Dict[str, Any]):
+    """Print raw JSON response for debugging."""
+    print(f"\n   📋 RAW JSON ({label}):")
+    print("-" * 50)
+    try:
+        print(json.dumps(result, indent=2, default=str))
+    except:
+        print(str(result))
+    print("-" * 50)
+
+
 async def run_graphiti_test():
     """Run the Graphiti memory test sequence."""
     from backend.mcp.registry import get_mcp_registry
@@ -45,7 +56,12 @@ async def run_graphiti_test():
     print("\n[2/6] Checking Graphiti server status...")
     try:
         status_result = await registry.call_tool('graphiti.get_status', {})
-        print(f"   Status: {_extract_message(status_result)}")
+        _print_raw_json("get_status", status_result)
+        if not status_result.get('success'):
+            print(f"   ❌ Status check failed")
+            await registry.shutdown()
+            return False
+        print(f"   ✅ Status: {_extract_message(status_result)}")
     except Exception as e:
         print(f"   ❌ Status check failed: {e}")
         await registry.shutdown()
@@ -72,6 +88,13 @@ async def run_graphiti_test():
             'group_ids': [test_group],
             'max_nodes': 20
         })
+        _print_raw_json("search_nodes (existing check)", nodes_result)
+        
+        if not nodes_result.get('success'):
+            print(f"   ❌ Search failed: {nodes_result.get('error')}")
+            await registry.shutdown()
+            return False
+            
         existing_nodes = _extract_nodes(nodes_result)
         
         if existing_nodes:
@@ -83,8 +106,9 @@ async def run_graphiti_test():
             print("   ℹ️  No existing memories found - will create them")
             memories_exist = False
     except Exception as e:
-        print(f"   ⚠️  Could not check existing: {e}")
-        memories_exist = False
+        print(f"   ❌ Error checking existing memories: {e}")
+        await registry.shutdown()
+        return False
     
     # Add memories only if they don't exist
     if not memories_exist:
@@ -98,11 +122,20 @@ async def run_graphiti_test():
                     'source': 'text',
                     'source_description': 'User preference observation'
                 })
+                _print_raw_json(f"add_memory [{i}/5]", result)
+                
+                if not result.get('success'):
+                    print(f"   ❌ [{i}/5] Failed: {result.get('error')}")
+                    await registry.shutdown()
+                    return False
+                    
                 msg = _extract_message(result)
                 status_icon = "⏳" if "queued" in msg.lower() else "✅"
                 print(f"   {status_icon} [{i}/5] \"{memory[:45]}...\"")
             except Exception as e:
-                print(f"   ❌ [{i}/5] Failed: {e}")
+                print(f"   ❌ [{i}/5] Exception: {e}")
+                await registry.shutdown()
+                return False
         
         # Wait for processing
         print("\n   Waiting for graph processing (30s)...")
@@ -122,6 +155,13 @@ async def run_graphiti_test():
             'group_ids': [test_group],
             'max_episodes': 20
         })
+        _print_raw_json("get_episodes", episodes_result)
+        
+        if not episodes_result.get('success'):
+            print(f"   ❌ Get episodes failed: {episodes_result.get('error')}")
+            await registry.shutdown()
+            return False
+            
         episodes = _extract_episodes(episodes_result)
         if episodes:
             print(f"   ✅ Found {len(episodes)} episodes")
@@ -130,7 +170,9 @@ async def run_graphiti_test():
         else:
             print("   ⚠️  No episodes found")
     except Exception as e:
-        print(f"   ❌ Get episodes failed: {e}")
+        print(f"   ❌ Get episodes exception: {e}")
+        await registry.shutdown()
+        return False
     
     # Check nodes
     print("\n   b) Checking nodes...")
@@ -140,6 +182,13 @@ async def run_graphiti_test():
             'group_ids': [test_group],
             'max_nodes': 20
         })
+        _print_raw_json("search_nodes (validation)", nodes_result)
+        
+        if not nodes_result.get('success'):
+            print(f"   ❌ Node search failed: {nodes_result.get('error')}")
+            await registry.shutdown()
+            return False
+            
         nodes = _extract_nodes(nodes_result)
         if nodes:
             print(f"   ✅ Found {len(nodes)} nodes:")
@@ -149,7 +198,9 @@ async def run_graphiti_test():
         else:
             print("   ❌ No nodes found - graph not populated")
     except Exception as e:
-        print(f"   ❌ Node search failed: {e}")
+        print(f"   ❌ Node search exception: {e}")
+        await registry.shutdown()
+        return False
     
     # Check facts
     print("\n   c) Checking facts...")
@@ -159,6 +210,13 @@ async def run_graphiti_test():
             'group_ids': [test_group],
             'max_facts': 20
         })
+        _print_raw_json("search_memory_facts (validation)", facts_result)
+        
+        if not facts_result.get('success'):
+            print(f"   ❌ Fact search failed: {facts_result.get('error')}")
+            await registry.shutdown()
+            return False
+            
         facts = _extract_facts(facts_result)
         if facts:
             print(f"   ✅ Found {len(facts)} facts:")
@@ -168,7 +226,9 @@ async def run_graphiti_test():
         else:
             print("   ⚠️  No facts found")
     except Exception as e:
-        print(f"   ❌ Fact search failed: {e}")
+        print(f"   ❌ Fact search exception: {e}")
+        await registry.shutdown()
+        return False
     
     # Run final query only if validation passed
     if not validation_passed:
@@ -195,6 +255,7 @@ async def run_graphiti_test():
             'group_ids': [test_group],
             'max_facts': 10
         })
+        _print_raw_json("search_memory_facts (final query)", facts_result)
         facts = _extract_facts(facts_result)
         
         print("\n   📊 RELEVANT FACTS:")
@@ -213,6 +274,7 @@ async def run_graphiti_test():
             'group_ids': [test_group],
             'max_nodes': 10
         })
+        _print_raw_json("search_nodes (final query)", nodes_result)
         nodes = _extract_nodes(nodes_result)
         
         print("\n   📊 RELEVANT NODES:")
