@@ -457,6 +457,59 @@ Then open http://localhost:5173 in your browser.
 - **Frontend Optimization:** UI preserves server-side ordering for consistent user experience
 - **Real-time Updates:** New conversations appear at the top of the list immediately
 
+## API Testing
+
+The backend exposes REST endpoints for testing and debugging functionality.
+
+### MCP Server Status
+
+Get all available MCP servers and their capabilities:
+
+```bash
+curl http://localhost:8001/api/mcp/status | jq
+```
+
+**Response includes:**
+- `initialized`: Whether MCP registry is ready
+- `servers`: List of registered MCP servers with their tools
+- `total_tools`: Count of available tools
+
+**Example response:**
+```json
+{
+  "initialized": true,
+  "servers": [
+    {
+      "name": "calculator",
+      "tools": ["add", "subtract", "multiply", "divide"]
+    },
+    {
+      "name": "system-datetime",
+      "tools": ["get-system-date-time"]
+    }
+  ],
+  "total_tools": 5
+}
+```
+
+### Call MCP Tool Directly
+
+```bash
+curl -X POST "http://localhost:8001/api/mcp/call?tool_name=add&arguments={\"a\":5,\"b\":3}"
+```
+
+### Model Quality Metrics
+
+Get all model performance metrics:
+```bash
+curl http://localhost:8001/api/metrics | jq
+```
+
+Get ranked model list:
+```bash
+curl http://localhost:8001/api/metrics/ranking | jq
+```
+
 ## Tech Stack
 
 - **Backend:** FastAPI (Python 3.10+), async httpx, LM Studio API, multi-round deliberation, background title generation, conversation management, dynamic configuration

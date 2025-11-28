@@ -20,6 +20,9 @@ class MCPRegistry:
         self.server_ports: Dict[str, int] = {}  # Server name -> port
         self._initialized = False
         self._base_port = self.DEFAULT_BASE_PORT
+        # Status tracking
+        self.server_status: Dict[str, str] = {}  # Server name -> "available" | "busy" | "offline"
+        self.tools_in_use: Dict[str, bool] = {}  # Full tool name -> in_use
     
     def _find_config(self) -> str:
         """Find the mcp_servers.json config file."""
@@ -91,10 +94,12 @@ class MCPRegistry:
                 if success:
                     self.clients[name] = client
                     self.server_ports[name] = port
+                    self.server_status[name] = "available"  # Track status
                     # Add tools with full names
                     for tool_name, tool in client.tools.items():
                         full_name = f"{name}.{tool_name}"
                         self.all_tools[full_name] = tool
+                        self.tools_in_use[full_name] = False  # Track tool usage
                     print(f"[MCP Registry] Started server: {name} on port {port}")
                 else:
                     print(f"[MCP Registry] Failed to start server: {name}")
@@ -116,22 +121,43 @@ class MCPRegistry:
         self.clients.clear()
         self.all_tools.clear()
         self.server_ports.clear()
+        self.server_status.clear()
+        self.tools_in_use.clear()
         self._initialized = False
     
     def _get_status(self) -> Dict[str, Any]:
         """Get current registry status."""
+        # Build server details with status
+        server_details = []
+        for name in self.clients.keys():
+            server_tools = [
+                full_name for full_name, tool in self.all_tools.items()
+                if tool.server_name == name
+            ]
+            busy_tools = sum(1 for t in server_tools if self.tools_in_use.get(t, False))
+            server_details.append({
+                "name": name,
+                "port": self.server_ports.get(name),
+                "status": self.server_status.get(name, "offline"),
+                "tool_count": len(server_tools),
+                "busy_tools": busy_tools
+            })
+        
         return {
             "enabled": len(self.clients) > 0,
             "servers": list(self.clients.keys()),
+            "server_details": server_details,
             "server_ports": self.server_ports,
             "base_port": self._base_port,
             "tools": list(self.all_tools.keys()),
+            "tools_in_use": {k: v for k, v in self.tools_in_use.items() if v},  # Only active
             "tool_details": [
                 {
                     "name": full_name,
                     "description": tool.description,
                     "server": tool.server_name,
-                    "port": self.server_ports.get(tool.server_name)
+                    "port": self.server_ports.get(tool.server_name),
+                    "in_use": self.tools_in_use.get(full_name, False)
                 }
                 for full_name, tool in self.all_tools.items()
             ]
@@ -230,6 +256,10 @@ class MCPRegistry:
         if not client:
             return {"error": f"Server not running: {tool.server_name}"}
         
+        # Mark tool and server as busy
+        self.tools_in_use[full_name] = True
+        self.server_status[tool.server_name] = "busy"
+        
         try:
             result = await client.call_tool(tool.name, arguments)
             return {
@@ -247,6 +277,16 @@ class MCPRegistry:
                 "input": arguments,
                 "error": str(e)
             }
+        finally:
+            # Mark tool as no longer in use
+            self.tools_in_use[full_name] = False
+            # Check if any other tools on this server are busy
+            server_tools = [
+                fname for fname, t in self.all_tools.items()
+                if t.server_name == tool.server_name
+            ]
+            any_busy = any(self.tools_in_use.get(t, False) for t in server_tools)
+            self.server_status[tool.server_name] = "busy" if any_busy else "available"
     
     def should_use_tools(self, query: str) -> bool:
         """

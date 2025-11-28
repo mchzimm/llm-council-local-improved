@@ -13,9 +13,153 @@
 }
 
 .sidebar-header h1 {
-  margin: 0 0 15px 0;
+  margin: 0;
   font-size: 24px;
   color: #333;
+}
+
+/* Title area with MCP badge */
+.title-area {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 15px;
+  cursor: default;
+}
+
+.mcp-badge {
+  font-size: 24px;
+  font-weight: bold;
+  color: #007bff;
+  text-shadow: 
+    -1px -1px 0 #ccc,
+    1px -1px 0 #ccc,
+    -1px 1px 0 #ccc,
+    1px 1px 0 #ccc;
+}
+
+/* MCP Server Status Overlay */
+.mcp-overlay {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  background: rgba(40, 40, 40, 0.95);
+  border-radius: 8px;
+  padding: 12px;
+  min-width: 200px;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.mcp-overlay-header {
+  font-size: 12px;
+  font-weight: 600;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #444;
+}
+
+.mcp-server-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mcp-server-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 13px;
+  transition: background-color 0.15s;
+}
+
+.mcp-server-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-indicator.status-available {
+  background: #4caf50;
+  box-shadow: 0 0 4px #4caf50;
+}
+
+.status-indicator.status-busy {
+  background: #ffc107;
+  box-shadow: 0 0 4px #ffc107;
+}
+
+.status-indicator.status-offline {
+  background: #f44336;
+  box-shadow: 0 0 4px #f44336;
+}
+
+.server-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.server-port {
+  color: #888;
+  font-size: 11px;
+}
+
+/* Tool Overlay */
+.mcp-tools-overlay {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  margin-left: 8px;
+  background: rgba(50, 50, 50, 0.95);
+  border-radius: 8px;
+  padding: 12px;
+  min-width: 180px;
+  z-index: 1001;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.mcp-tool-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mcp-tool-item {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #ddd;
+}
+
+.mcp-tool-item.in-use {
+  color: #ffc107;
+  font-weight: 500;
+}
+
+.tool-name {
+  font-family: monospace;
+}
+
+.mcp-overlay-metrics {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #444;
+  font-size: 11px;
+  color: #888;
 }
 
 .new-conversation-btn {

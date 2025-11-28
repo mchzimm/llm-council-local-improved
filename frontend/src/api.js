@@ -173,4 +173,15 @@ export const api = {
       }
     }
   },
+
+  /**
+   * Get MCP server status and available tools.
+   */
+  async getMcpStatus() {
+    const response = await fetch(`${API_BASE}/api/mcp/status`);
+    if (!response.ok) {
+      throw new Error('Failed to get MCP status');
+    }
+    return response.json();
+  },
 };

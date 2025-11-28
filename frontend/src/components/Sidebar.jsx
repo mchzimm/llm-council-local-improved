@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { api } from '../api';
 import './Sidebar.css';
 
 export default function Sidebar({
@@ -14,6 +15,29 @@ export default function Sidebar({
   const [isRecycleBinView, setIsRecycleBinView] = useState(false);
   const [deletedConversations, setDeletedConversations] = useState([]);
   const [hoveredDeleteBtn, setHoveredDeleteBtn] = useState(null);
+  
+  // MCP status state
+  const [mcpStatus, setMcpStatus] = useState(null);
+  const [showMcpOverlay, setShowMcpOverlay] = useState(false);
+  const [hoveredServer, setHoveredServer] = useState(null);
+  const overlayRef = useRef(null);
+  const serverOverlayRef = useRef(null);
+
+  // Fetch MCP status on mount and periodically
+  useEffect(() => {
+    const fetchMcpStatus = async () => {
+      try {
+        const status = await api.getMcpStatus();
+        setMcpStatus(status);
+      } catch (error) {
+        console.error('Failed to fetch MCP status:', error);
+      }
+    };
+    
+    fetchMcpStatus();
+    const interval = setInterval(fetchMcpStatus, 5000); // Poll every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
 
   // Fetch deleted conversations when entering recycle bin view
   useEffect(() => {
@@ -72,10 +96,80 @@ export default function Sidebar({
 
   const recycleBinCount = deletedConversations.length;
 
+  // Get tools for a specific server
+  const getServerTools = (serverName) => {
+    if (!mcpStatus?.tool_details) return [];
+    return mcpStatus.tool_details.filter(t => t.server === serverName);
+  };
+
+  // Calculate metrics
+  const totalServers = mcpStatus?.server_details?.length || 0;
+  const availableServers = mcpStatus?.server_details?.filter(s => s.status === 'available').length || 0;
+  const totalTools = mcpStatus?.tool_details?.length || 0;
+  const activeTools = Object.keys(mcpStatus?.tools_in_use || {}).length;
+
   return (
     <div className="sidebar">
       <div className="sidebar-header">
-        <h1>LLM Council</h1>
+        <div 
+          className="title-area"
+          onMouseEnter={() => setShowMcpOverlay(true)}
+          onMouseLeave={() => {
+            setShowMcpOverlay(false);
+            setHoveredServer(null);
+          }}
+        >
+          <h1>LLM Council</h1>
+          {mcpStatus?.enabled && (
+            <span className="mcp-badge">MCP</span>
+          )}
+          
+          {/* MCP Server Status Overlay */}
+          {showMcpOverlay && mcpStatus && (
+            <div className="mcp-overlay" ref={overlayRef}>
+              <div className="mcp-overlay-header">MCP Servers</div>
+              <div className="mcp-server-list">
+                {mcpStatus.server_details?.map((server) => (
+                  <div 
+                    key={server.name}
+                    className="mcp-server-item"
+                    onMouseEnter={() => setHoveredServer(server.name)}
+                    onMouseLeave={() => setHoveredServer(null)}
+                  >
+                    <span className={`status-indicator status-${server.status}`} />
+                    <span className="server-name">{server.name}</span>
+                    <span className="server-port">:{server.port}</span>
+                    
+                    {/* Tool Overlay for this server */}
+                    {hoveredServer === server.name && (
+                      <div className="mcp-tools-overlay" ref={serverOverlayRef}>
+                        <div className="mcp-overlay-header">{server.name} Tools</div>
+                        <div className="mcp-tool-list">
+                          {getServerTools(server.name).map((tool) => (
+                            <div 
+                              key={tool.name}
+                              className={`mcp-tool-item ${tool.in_use ? 'in-use' : ''}`}
+                            >
+                              <span className="tool-name">{tool.name.split('.')[1]}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mcp-overlay-metrics">
+                          {getServerTools(server.name).length} tools
+                          {server.busy_tools > 0 && ` • ${server.busy_tools} active`}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="mcp-overlay-metrics">
+                {availableServers}/{totalServers} servers available • {totalTools} tools
+                {activeTools > 0 && ` • ${activeTools} active`}
+              </div>
+            </div>
+          )}
+        </div>
         {!isRecycleBinView ? (
           <button 
             className={`new-conversation-btn ${newConversationDisabled ? 'disabled' : ''}`}
