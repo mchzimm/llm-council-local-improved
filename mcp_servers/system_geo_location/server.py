@@ -2,85 +2,37 @@
 """System Geo-Location MCP server for retrieving location based on IP."""
 
 import json
-import re
 import urllib.request
 import urllib.error
 from typing import Dict, Any
 
 
-def get_page_from_url(url: str) -> str:
-    """Fetch HTML content from a URL.
-    
-    Args:
-        url: The URL to fetch
-    
-    Returns:
-        HTML content as string, or empty string on error
-    """
-    try:
-        req = urllib.request.Request(
-            url,
-            headers={'User-Agent': 'Mozilla/5.0 (compatible; LLMCouncil/1.0)'}
-        )
-        
-        with urllib.request.urlopen(req, timeout=30) as response:
-            return response.read().decode('utf-8', errors='replace')
-            
-    except Exception:
-        return ""
-
-
-def parse_location_from_html(html: str) -> Dict[str, str]:
-    """Extract location fields from whatismyip.com HTML.
-    
-    Args:
-        html: HTML content from whatismyip.com
-    
-    Returns:
-        Dictionary with city, state, postal, country fields
-    """
-    location = {}
-    
-    # whatismyip.com uses table rows with specific patterns
-    patterns = {
-        'city': r'City[:\s]*</[^>]+>\s*<[^>]+>([^<]+)',
-        'state': r'(?:State|Region)[:\s]*</[^>]+>\s*<[^>]+>([^<]+)',
-        'postal': r'(?:Postal|Zip)\s*(?:Code)?[:\s]*</[^>]+>\s*<[^>]+>([^<]+)',
-        'country': r'Country[:\s]*</[^>]+>\s*<[^>]+>([^<]+)'
-    }
-    
-    for field, pattern in patterns.items():
-        match = re.search(pattern, html, re.IGNORECASE)
-        if match:
-            location[field] = match.group(1).strip()
-    
-    return location
-
-
 def get_system_geo_location() -> Dict[str, Any]:
-    """Get the system's geographic location based on IP.
+    """Get the system's geographic location based on IP using ipinfo.io.
     
     Returns:
         Dictionary with success status and location data or error
     """
     try:
-        # Fetch the whatismyip.com page
-        html = get_page_from_url("https://www.whatismyip.com/")
+        # Use ipinfo.io API - free tier, no auth required for basic info
+        req = urllib.request.Request(
+            "https://ipinfo.io/json",
+            headers={'User-Agent': 'Mozilla/5.0 (compatible; LLMCouncil/1.0)'}
+        )
         
-        if not html:
-            return {
-                "success": False,
-                "error": "Failed to retrieve location page"
-            }
+        with urllib.request.urlopen(req, timeout=10) as response:
+            data = json.loads(response.read().decode('utf-8'))
         
-        # Parse location from HTML
-        location = parse_location_from_html(html)
-        
-        if not location:
-            return {
-                "success": False,
-                "error": "Could not parse location from page"
-            }
+        # Extract location fields
+        location = {
+            'city': data.get('city', ''),
+            'state': data.get('region', ''),
+            'postal': data.get('postal', ''),
+            'country': data.get('country', ''),
+            'ip': data.get('ip', ''),
+            'timezone': data.get('timezone', ''),
+            'coordinates': data.get('loc', '')
+        }
         
         # Format the result
         result_parts = []
@@ -92,6 +44,12 @@ def get_system_geo_location() -> Dict[str, Any]:
             result_parts.append(f"Postal Code: {location['postal']}")
         if location.get('country'):
             result_parts.append(f"Country: {location['country']}")
+        if location.get('ip'):
+            result_parts.append(f"IP Address: {location['ip']}")
+        if location.get('timezone'):
+            result_parts.append(f"Timezone: {location['timezone']}")
+        if location.get('coordinates'):
+            result_parts.append(f"Coordinates: {location['coordinates']}")
         
         return {
             "success": True,
@@ -99,6 +57,16 @@ def get_system_geo_location() -> Dict[str, Any]:
             "data": location
         }
         
+    except urllib.error.URLError as e:
+        return {
+            "success": False,
+            "error": f"Network error: {str(e)}"
+        }
+    except json.JSONDecodeError as e:
+        return {
+            "success": False,
+            "error": f"Failed to parse response: {str(e)}"
+        }
     except Exception as e:
         return {
             "success": False,
