@@ -17,7 +17,14 @@ In a bit more detail, here is what happens when you submit a query:
 
 ## Key Features
 
-### Current Release (v0.16.0)
+### Current Release (v0.17.0)
+- **External MCP Server Support**: Install MCP servers from online sources
+  - New `transport` config field: `"stdio"` for external servers, `"http"` for local (default)
+  - Support for npx-based MCP servers (e.g., `@modelcontextprotocol/server-*`)
+  - Integrated `sequential-thinking` server for dynamic problem-solving
+  - Easy addition of servers from mcpservers.org and GitHub MCP repos
+
+### Previous Release (v0.16.0)
 - **Intelligent Prompt Engineering**: Dynamic prompt generation system
   - `prompt_engineer` model config (defaults to chairman if not specified)
   - Prompt library (`data/prompt_library.json`, `data/prompt_library.md`) for caching proven prompts
