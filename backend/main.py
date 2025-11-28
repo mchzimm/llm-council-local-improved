@@ -18,7 +18,8 @@ from .council import (
     stage3_synthesize_final, calculate_aggregate_rankings,
     stage1_collect_responses_streaming, stage2_collect_rankings_streaming,
     stage3_synthesize_streaming,
-    classify_message, chairman_direct_response, check_and_execute_tools
+    classify_message, chairman_direct_response, check_and_execute_tools,
+    _requires_websearch
 )
 from .title_generation import title_service
 from .model_validator import validate_models
@@ -248,9 +249,14 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
     classification = await classify_message(request.content)
     msg_type = classification.get("type", "deliberation")
     
-    # Check for tool usage
+    # Check for tool usage - also force tool check for websearch keywords
     tool_result = None
-    if classification.get("requires_tools", False) or msg_type in ["factual", "chat"]:
+    needs_tool_check = (
+        classification.get("requires_tools", False) or 
+        msg_type in ["factual", "chat"] or
+        _requires_websearch(request.content)  # Force check for news/events queries
+    )
+    if needs_tool_check:
         tool_result = await check_and_execute_tools(request.content)
     
     # Route based on message type
@@ -258,12 +264,13 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
         # Direct response path - skip council deliberation
         direct_result = await chairman_direct_response(request.content, tool_result)
         
-        # Save as simplified assistant message
+        # Save as simplified assistant message (include tool_result)
         storage.add_assistant_message(
             conversation_id,
             [],  # No stage1
             [],  # No stage2
-            direct_result
+            direct_result,
+            tool_result  # Include tool result for persistence
         )
         
         return {
@@ -287,7 +294,8 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
         conversation_id,
         stage1_results,
         stage2_results,
-        stage3_result
+        stage3_result,
+        tool_result  # Include tool result for persistence
     )
 
     return {
@@ -360,12 +368,13 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
             stage3_result = await stage3_synthesize_final(request.content, stage1_results, stage2_results)
             yield f"data: {json.dumps({'type': 'stage3_complete', 'data': stage3_result})}\n\n"
 
-            # Save complete assistant message
+            # Save complete assistant message (include tool_result)
             storage.add_assistant_message(
                 conversation_id,
                 stage1_results,
                 stage2_results,
-                stage3_result
+                stage3_result,
+                tool_result  # Include tool result for persistence
             )
 
             # Send completion event
@@ -450,8 +459,13 @@ async def send_message_stream_tokens(conversation_id: str, request: SendMessageR
             yield f"data: {json.dumps({'type': 'classification_complete', 'classification': classification})}\n\n"
             
             # Check for tool usage first (regardless of message type)
+            # Also force tool check for websearch keywords
             tool_result = None
-            if classification.get("requires_tools", False):
+            needs_tool_check = (
+                classification.get("requires_tools", False) or
+                _requires_websearch(request.content)  # Force check for news/events queries
+            )
+            if needs_tool_check:
                 yield f"data: {json.dumps({'type': 'tool_check_start'})}\n\n"
                 tool_result = await check_and_execute_tools(request.content, on_event)
                 
@@ -503,12 +517,13 @@ async def send_message_stream_tokens(conversation_id: str, request: SendMessageR
                 
                 yield f"data: {json.dumps({'type': 'direct_response_complete', 'data': direct_result})}\n\n"
                 
-                # Save as a simplified assistant message (direct response)
+                # Save as a simplified assistant message (direct response, include tool_result)
                 storage.add_assistant_message(
                     conversation_id,
                     [],  # No stage1 results
                     [],  # No stage2 results
-                    direct_result  # Direct response as stage3
+                    direct_result,  # Direct response as stage3
+                    tool_result  # Include tool result for persistence
                 )
                 
                 # Save final answer as markdown
@@ -606,12 +621,13 @@ async def send_message_stream_tokens(conversation_id: str, request: SendMessageR
             
             yield f"data: {json.dumps({'type': 'stage3_complete', 'data': stage3_result})}\n\n"
 
-            # Save complete assistant message
+            # Save complete assistant message (include tool_result)
             storage.add_assistant_message(
                 conversation_id,
                 stage1_results,
                 stage2_results,
-                stage3_result
+                stage3_result,
+                tool_result  # Include tool result for persistence
             )
             
             # Save final answer as markdown file

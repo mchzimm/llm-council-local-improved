@@ -10,7 +10,8 @@
         "min_length": 100
       },
       "tags": ["mcp", "websearch", "current-events", "core"],
-      "timeout_seconds": 120.0
+      "timeout_seconds": 120.0,
+      "disabled": true
     },
     {
       "name": "current_weather",

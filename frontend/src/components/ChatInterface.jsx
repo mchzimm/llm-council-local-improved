@@ -136,20 +136,21 @@ export default function ChatInterface({
                   )}
 
                   {/* Tool result card - shown for both direct and deliberation responses */}
-                  {msg.toolResult && (
+                  {/* Check both toolResult (streaming) and tool_result (stored) */}
+                  {(msg.toolResult || msg.tool_result) && (
                     <div className="tool-result-card">
                       <div className="tool-result-header">
                         <span className="tool-icon">🔧</span>
-                        <span className="tool-name">MCP Tool: {msg.toolResult.tool}</span>
+                        <span className="tool-name">MCP Tool: {(msg.toolResult || msg.tool_result).tool || `${(msg.toolResult || msg.tool_result).server}.${(msg.toolResult || msg.tool_result).tool}`}</span>
                       </div>
                       <div className="tool-result-body">
                         <div className="tool-io">
                           <span className="tool-label">Input:</span>
-                          <code className="tool-value">{JSON.stringify(msg.toolResult.input)}</code>
+                          <code className="tool-value">{JSON.stringify((msg.toolResult || msg.tool_result).input)}</code>
                         </div>
                         <div className="tool-io">
                           <span className="tool-label">Output:</span>
-                          <code className="tool-value">{typeof msg.toolResult.output === 'string' ? msg.toolResult.output : JSON.stringify(msg.toolResult.output)}</code>
+                          <code className="tool-value">{typeof (msg.toolResult || msg.tool_result).output === 'string' ? (msg.toolResult || msg.tool_result).output : JSON.stringify((msg.toolResult || msg.tool_result).output)}</code>
                         </div>
                       </div>
                     </div>
