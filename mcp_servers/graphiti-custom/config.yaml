@@ -1,12 +1,11 @@
 # Graphiti Custom MCP Server
-# With LM Studio support via custom client
+# Auto-generated from graphiti_config.json
+# Do not edit directly - modify graphiti_config.json instead
 
 server:
   transport: http
-  host: "0.0.0.0"
+  host: 0.0.0.0
   port: 8000
-
-# LLM Configuration - Using LM Studio custom client
 llm:
   provider: lmstudio
   model: qwen2.5-14b-instruct
@@ -14,23 +13,17 @@ llm:
   max_tokens: 16384
   providers:
     openai_generic:
-      api_key: "lms"
-      api_url: "http://192.168.1.111:11434/v1"
-
-# Embedder Configuration - Using LM Studio with nomic-embed
+      api_key: lms
+      api_url: http://192.168.1.111:11434/v1
 embedder:
   provider: openai_generic
   model: text-embedding-nomic-embed-text-v1.5@f16
-
-# Database Configuration - FalkorDB
 database:
   provider: falkordb
   providers:
     falkordb:
-      uri: "redis://192.168.1.111:6379"
-      password: ""
-      database: "graphiti"
-
-# Graphiti Settings
+      uri: redis://192.168.1.111:6379
+      password: ''
+      database: graphiti
 graphiti:
-  group_id: "main"
+  group_id: main
