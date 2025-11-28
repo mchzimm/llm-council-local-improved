@@ -192,24 +192,30 @@ async def chairman_direct_response(
     """
     # Include current date/time context
     current_time = datetime.now()
-    time_context = f"(Current date: {current_time.strftime('%B %d, %Y')}, Time: {current_time.strftime('%H:%M')})"
+    time_context = f"Today's date: {current_time.strftime('%B %d, %Y')} | Current time: {current_time.strftime('%H:%M')}"
     
     # Build prompt based on whether tools were used
     if tool_result and tool_result.get('success'):
         tool_context = format_tool_result_for_prompt(tool_result)
-        prompt = f"""Answer this question directly using the tool result provided.
+        prompt = f"""IMPORTANT CONTEXT:
+- {time_context}
+- A real-time tool was executed to fetch CURRENT, LIVE data for this query
+- The tool output below contains UP-TO-DATE information retrieved just now
+- DO NOT claim you "lack access to current information" - you HAVE it via the tool output
 
 {tool_context}
 
 Question: {user_query}
-{time_context}
 
-Provide a clear, direct answer using the tool output. Be concise but complete."""
+Instructions:
+1. The tool output above is CURRENT and AUTHORITATIVE - use it directly
+2. Present the information as current facts (because they ARE current)
+3. Provide a clear, direct answer. Be concise but complete."""
     else:
         prompt = f"""Answer this question directly and concisely.
 
 Question: {user_query}
-{time_context}
+({time_context})
 
 Provide a helpful, accurate answer. Be concise but complete."""
     
@@ -1367,22 +1373,40 @@ async def stage1_collect_responses_streaming(
     
     # Include tool result in prompt if available
     if tool_context:
+        # Get current date/time to provide context
+        current_time = datetime.now()
+        time_context = f"Today's date: {current_time.strftime('%B %d, %Y')} | Current time: {current_time.strftime('%H:%M')}"
+        
         if response_style == "concise":
-            prompt = f"""Answer the following question concisely and directly. A tool was used to help answer this question.
+            prompt = f"""IMPORTANT CONTEXT:
+- {time_context}
+- A real-time tool was executed to fetch CURRENT, LIVE data for this query
+- The tool output below contains UP-TO-DATE information retrieved just now
+- DO NOT claim you "lack access to current information" - you HAVE it via the tool output
 
 {tool_context}
 
 Question: {user_query}
 
-Use the tool output above to inform your answer. Be clear and informative."""
+Instructions:
+1. The tool output above is CURRENT and AUTHORITATIVE - use it directly
+2. Present the information as current facts (because they ARE current)
+3. Be concise but complete"""
         else:
-            prompt = f"""A tool was used to help answer this question:
+            prompt = f"""IMPORTANT CONTEXT:
+- {time_context}
+- A real-time tool was executed to fetch CURRENT, LIVE data for this query
+- The tool output below contains UP-TO-DATE information retrieved just now
+- DO NOT claim you "lack access to current information" - you HAVE it via the tool output
 
 {tool_context}
 
 Question: {user_query}
 
-Please incorporate the tool output into your response."""
+Instructions:
+1. The tool output above is CURRENT and AUTHORITATIVE - use it directly
+2. Present the information as current facts (because they ARE current)
+3. Incorporate the tool output fully into your response"""
     elif response_style == "concise":
         prompt = f"""Answer the following question concisely and directly. Be clear and informative, but avoid unnecessary verbosity. Aim for 2-3 focused paragraphs.
 
