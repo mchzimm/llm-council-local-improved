@@ -22,6 +22,32 @@ export default function Sidebar({
   const [hoveredServer, setHoveredServer] = useState(null);
   const overlayRef = useRef(null);
   const serverOverlayRef = useRef(null);
+  const overlayCloseTimerRef = useRef(null);
+
+  // Overlay group hover handlers - 2s delay before closing
+  const handleOverlayGroupEnter = () => {
+    if (overlayCloseTimerRef.current) {
+      clearTimeout(overlayCloseTimerRef.current);
+      overlayCloseTimerRef.current = null;
+    }
+    setShowMcpOverlay(true);
+  };
+
+  const handleOverlayGroupLeave = () => {
+    overlayCloseTimerRef.current = setTimeout(() => {
+      setShowMcpOverlay(false);
+      setHoveredServer(null);
+    }, 2000);
+  };
+
+  // Clean up overlay close timer on unmount
+  useEffect(() => {
+    return () => {
+      if (overlayCloseTimerRef.current) {
+        clearTimeout(overlayCloseTimerRef.current);
+      }
+    };
+  }, []);
 
   // Fetch MCP status on mount and periodically
   useEffect(() => {
@@ -113,11 +139,8 @@ export default function Sidebar({
       <div className="sidebar-header">
         <div 
           className="title-area"
-          onMouseEnter={() => setShowMcpOverlay(true)}
-          onMouseLeave={() => {
-            setShowMcpOverlay(false);
-            setHoveredServer(null);
-          }}
+          onMouseEnter={handleOverlayGroupEnter}
+          onMouseLeave={handleOverlayGroupLeave}
         >
           <h1>LLM Council</h1>
           {mcpStatus?.enabled && (
@@ -126,7 +149,12 @@ export default function Sidebar({
           
           {/* MCP Server Status Overlay */}
           {showMcpOverlay && mcpStatus && (
-            <div className="mcp-overlay" ref={overlayRef}>
+            <div 
+              className="mcp-overlay" 
+              ref={overlayRef}
+              onMouseEnter={handleOverlayGroupEnter}
+              onMouseLeave={handleOverlayGroupLeave}
+            >
               <div className="mcp-overlay-header">MCP Servers</div>
               <div className="mcp-server-list">
                 {mcpStatus.server_details?.map((server) => (
@@ -134,7 +162,6 @@ export default function Sidebar({
                     key={server.name}
                     className="mcp-server-item"
                     onMouseEnter={() => setHoveredServer(server.name)}
-                    onMouseLeave={() => setHoveredServer(null)}
                   >
                     <span className={`status-indicator status-${server.status}`} />
                     <span className="server-name">{server.name}</span>
@@ -142,7 +169,12 @@ export default function Sidebar({
                     
                     {/* Tool Overlay for this server */}
                     {hoveredServer === server.name && (
-                      <div className="mcp-tools-overlay" ref={serverOverlayRef}>
+                      <div 
+                        className="mcp-tools-overlay" 
+                        ref={serverOverlayRef}
+                        onMouseEnter={handleOverlayGroupEnter}
+                        onMouseLeave={handleOverlayGroupLeave}
+                      >
                         <div className="mcp-overlay-header">{server.name} Tools</div>
                         <div className="mcp-tool-list">
                           {getServerTools(server.name).map((tool) => (
