@@ -17,7 +17,15 @@ In a bit more detail, here is what happens when you submit a query:
 
 ## Key Features
 
-### Current Release (v0.17.0)
+### Current Release (v0.18.0)
+- **Graphiti Knowledge Graph Integration**: Persistent memory for AI agents
+  - Connect to external Graphiti MCP server (http://localhost:8000/mcp)
+  - Episode management: add memories, retrieve episodes, delete data
+  - Entity search: find nodes and facts in the knowledge graph
+  - Session-based HTTP MCP protocol with SSE response support
+  - 9 new tools for knowledge graph operations
+
+### Previous Release (v0.17.0)
 - **External MCP Server Support**: Install MCP servers from online sources
   - New `transport` config field: `"stdio"` for external servers, `"http"` for local (default)
   - Support for npx-based MCP servers (e.g., `@modelcontextprotocol/server-*`)
