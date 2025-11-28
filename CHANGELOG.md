@@ -4,6 +4,26 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.19.1
+**Branch:** `v0.19.1`  
+**Completed:** 2025-11-28 23:54 UTC | 2025-11-28 15:54 PST
+
+**Fixes:**
+- **Prevent Direct Master Commits**: Added git pre-commit hook to enforce versioning workflow
+  - Hook blocks commits to master/main with helpful error message
+  - Warns when branch name doesn't follow `v<release>.<feature>.<fix>` format
+  - New `setup-dev.sh` script installs hooks after cloning
+  - Updated AGENTS.md with hook documentation
+  - Updated README with setup instructions
+
+**Changes:**
+- `.git/hooks/pre-commit` - Git hook (local, installed via setup script)
+- `setup-dev.sh` - Development environment setup script
+- `AGENTS.md` - Added Git Hook Protection section
+- `README.md` - Added Step 0 for dev environment setup
+
+---
+
 ### v0.19.0
 **Branch:** `v0.19.0`  
 **Completed:** 2025-11-28 23:52 UTC | 2025-11-28 15:52 PST

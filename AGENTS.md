@@ -215,6 +215,15 @@ Models are now configured via `models.json` file instead of hardcoded values in 
 
 **CRITICAL: Follow this process BEFORE implementing any OpenSpec proposal or code change.**
 
+### Git Hook Protection
+A pre-commit hook prevents direct commits to master. If you see the error:
+```
+ERROR: Direct commits to 'master' are not allowed!
+```
+This means you forgot to create a version branch first. Follow the workflow below.
+
+**Setup (after cloning):** Run `./setup-dev.sh` to install the git hooks.
+
 The project follows semantic versioning with the format `<release>.<feature>.<fix>`:
 
 ### Version Number Rules

@@ -188,6 +188,15 @@ This project was 99% vibe coded as a fun Saturday hack because I wanted to explo
 
 ## Setup
 
+### 0. Development Environment Setup
+
+After cloning the repository, run the setup script to install git hooks:
+```bash
+./setup-dev.sh
+```
+
+This installs a pre-commit hook that prevents direct commits to master, enforcing the versioning workflow.
+
 ### 1. Install Dependencies
 
 The project uses [uv](https://docs.astral.sh/uv/) for project management.
