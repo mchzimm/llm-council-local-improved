@@ -36,9 +36,9 @@
       }
     ],
     "chairman": {
-      "id": "qwen/qwen3-4b-thinking-2507",
-      "name": "Qwen3-4B Thinking",
-      "description": "Qwen's 4B thinking model for synthesis",
+      "id": "nexveridian/granite-4.0-h-tiny",
+      "name": "chairman",
+      "description": "chairman model for final response synthesis",
       "ip": "",
       "port": "",
       "base_url_template": "",
