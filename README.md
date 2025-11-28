@@ -17,7 +17,15 @@ In a bit more detail, here is what happens when you submit a query:
 
 ## Key Features
 
-### Current Release (v0.11.0)
+### Current Release (v0.12.0)
+- **MCP Status Indicator**: Visual MCP server status in sidebar header
+  - "MCP" badge next to "LLM Council" title with blue/grey styling
+  - Hover overlay showing all MCP servers with status indicators
+  - Red (offline), yellow (busy), green (available) status colors
+  - Secondary hover overlay showing server tools with in-use highlighting
+  - Real-time metrics: server count, tool count, active tools
+
+### Previous Release (v0.11.0)
 - **System Timezone MCP Server**: New MCP server for retrieving timezone information
   - Tool: `get-timezone-list` returns system timezone and complete tz database list
   - Parses Wikipedia's timezone database for comprehensive coverage (500+ timezones)
