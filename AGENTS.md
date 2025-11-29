@@ -27,6 +27,21 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 This file contains technical details, architectural decisions, and important implementation notes for future development sessions.
 
+## Critical Rules
+
+### Temporary Files - ALWAYS Use Project's tmp/ Folder
+**⚠️ NEVER use system `/tmp/` directory. ALWAYS use the project's `tmp/` folder.**
+
+- ✅ Correct: `tmp/test_results/`, `tmp/intake.md`, `./tmp/scratch.txt`
+- ❌ Wrong: `/tmp/test.txt`, `/tmp/anything`
+
+The project's `tmp/` folder is at `<project_root>/tmp/` and is used for:
+- Test results (`tmp/test_results/`)
+- Intake files (`tmp/intake.md`)
+- Any temporary or scratch files needed during development
+
+This ensures all temporary data stays within the project and is properly tracked/cleaned up.
+
 ## Change Request Handling
 
 **CRITICAL: Follow this process when receiving ANY change request from user.**

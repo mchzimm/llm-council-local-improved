@@ -4,6 +4,21 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.19.2
+**Branch:** `v0.19.2`  
+**Completed:** 2025-11-29 00:05 UTC | 2025-11-28 16:05 PST
+
+**Fixes:**
+- **Enforce Project tmp/ Folder Usage**: Added explicit rule in AGENTS.md to always use project's `tmp/` folder
+  - Never use system `/tmp/` directory
+  - Documents correct paths: `tmp/test_results/`, `tmp/intake.md`
+  - Prevents temporary files from being created outside project
+
+**Changes:**
+- `AGENTS.md` - Added "Critical Rules" section with tmp folder guidance
+
+---
+
 ### v0.19.1
 **Branch:** `v0.19.1`  
 **Completed:** 2025-11-28 23:54 UTC | 2025-11-28 15:54 PST
