@@ -4,6 +4,22 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.29.11
+**Branch:** `v0.29.11`  
+**Completed:** 2025-11-29 18:10 UTC | 2025-11-29 10:10 PST
+
+**Fixes:**
+- **Calculator tool incorrectly triggered by "and/or" in queries**: Fixed false positive math detection
+  - "and/or" contains "/" which was being detected as a division operator
+  - Changed math detection to require operators be adjacent to numbers (e.g., "5/3" not "and/or")
+  - Split indicators into word-based (safe) and operator-based (regex validated)
+  - Added specific check for "what is <number>" pattern
+
+**Changes:**
+- `backend/council.py` - Improved math detection in `_analyze_user_expectations()` to avoid false positives
+
+---
+
 ### v0.29.10
 **Branch:** `v0.29.10`  
 **Completed:** 2025-11-29 17:49 UTC | 2025-11-29 09:49 PST

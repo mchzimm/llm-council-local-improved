@@ -684,11 +684,25 @@ JSON response:"""
             # Post-process: Fix common LLM mistakes for calculation queries
             # LLMs sometimes say "needs_external_data: false" for simple math
             query_lower = user_query.lower()
-            math_indicators = ['plus', 'minus', 'times', 'divided', 'multiply', 'add', 'subtract',
-                              'calculate', 'compute', '+', '-', '*', '/', '×', '÷', 'sum', 'difference',
-                              'product', 'quotient', 'what is', 'how much is']
+            
+            # Word-based math indicators (safe, won't cause false positives)
+            word_math_indicators = ['plus', 'minus', 'times', 'divided', 'multiply', 'add', 'subtract',
+                              'calculate', 'compute', 'sum', 'difference',
+                              'product', 'quotient', 'how much is']
+            
+            # Check for word-based math indicators
             has_numbers = any(c.isdigit() for c in user_query)
-            has_math = any(indicator in query_lower for indicator in math_indicators)
+            has_word_math = any(indicator in query_lower for indicator in word_math_indicators)
+            
+            # Check for operator-based math (must be adjacent to numbers to avoid "and/or" false positives)
+            # Pattern: number followed by operator followed by number (with optional spaces)
+            import re
+            has_operator_math = bool(re.search(r'\d\s*[+\-*/×÷]\s*\d', user_query))
+            
+            # Also check for "what is <number>" pattern which often indicates calculation
+            has_what_is_number = bool(re.search(r'what is\s+\d', query_lower))
+            
+            has_math = has_word_math or has_operator_math or has_what_is_number
             
             if has_numbers and has_math:
                 # Override LLM if it incorrectly said no external data needed for math
