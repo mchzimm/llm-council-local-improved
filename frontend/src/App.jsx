@@ -10,12 +10,14 @@ function App() {
   const [currentConversation, setCurrentConversation] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [initError, setInitError] = useState(null);
   const [titleGenerationStatus, setTitleGenerationStatus] = useState({}); // conversation_id -> status
 
   // Load conversations on mount and restore last viewed conversation
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        setInitError(null);
         const convs = await loadConversations();
         
         // Restore last viewed conversation from localStorage
@@ -36,6 +38,7 @@ function App() {
         }
       } catch (error) {
         console.error('Failed to initialize app:', error);
+        setInitError(error.message || 'Failed to connect to backend');
       } finally {
         setIsInitializing(false);
       }
@@ -1254,6 +1257,39 @@ function App() {
         <div className="init-loading">
           <div className="init-spinner"></div>
           <p>Loading LLM Council...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error screen if initialization failed
+  if (initError) {
+    return (
+      <div className="app app-loading">
+        <div className="init-loading init-error">
+          <div className="error-icon">⚠️</div>
+          <h2>Connection Error</h2>
+          <p>{initError}</p>
+          <button 
+            className="retry-btn"
+            onClick={() => {
+              setIsInitializing(true);
+              setInitError(null);
+              // Re-run initialization
+              const initializeApp = async () => {
+                try {
+                  await loadConversations();
+                } catch (error) {
+                  setInitError(error.message || 'Failed to connect to backend');
+                } finally {
+                  setIsInitializing(false);
+                }
+              };
+              initializeApp();
+            }}
+          >
+            Retry Connection
+          </button>
         </div>
       </div>
     );

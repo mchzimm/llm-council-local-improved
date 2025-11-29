@@ -4,6 +4,22 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.29.8
+**Branch:** `v0.29.8`  
+**Completed:** 2025-11-29 17:05 UTC | 2025-11-29 09:05 PST
+
+**Fixes:**
+- **Blank Page After Loading (v2)**: Enhanced error handling when backend is unavailable
+  - Added `initError` state to track initialization failures
+  - Shows error screen with retry button when connection fails
+  - Added proper error state styling with icon and button
+
+**Changes:**
+- `frontend/src/App.jsx` - Add initError state, error screen with retry button
+- `frontend/src/App.css` - Add error state styling (.init-error, .retry-btn)
+
+---
+
 ### v0.29.7
 **Branch:** `v0.29.7`  
 **Completed:** 2025-11-29 17:00 UTC | 2025-11-29 09:00 PST

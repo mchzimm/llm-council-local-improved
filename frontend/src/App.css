@@ -41,3 +41,42 @@
     transform: rotate(360deg);
   }
 }
+
+/* Error state styles */
+.init-error {
+  text-align: center;
+  max-width: 400px;
+  padding: 32px;
+}
+
+.init-error .error-icon {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+
+.init-error h2 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.init-error p {
+  margin: 0 0 24px 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.retry-btn {
+  padding: 10px 24px;
+  background: #4a5568;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.retry-btn:hover {
+  background: #2d3748;
+}
