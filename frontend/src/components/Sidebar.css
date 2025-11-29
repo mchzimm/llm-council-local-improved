@@ -475,3 +475,97 @@
   font-weight: bold;
 }
 
+
+
+/* Duplicates collapsible section */
+.duplicates-section {
+  margin-bottom: 8px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.duplicates-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+  color: white;
+  cursor: pointer;
+  font-size: 13px;
+  border-radius: 8px;
+  list-style: none;
+}
+
+.duplicates-header::-webkit-details-marker {
+  display: none;
+}
+
+.duplicates-section[open] .duplicates-header {
+  border-radius: 8px 8px 0 0;
+}
+
+.duplicates-icon {
+  font-size: 14px;
+}
+
+.duplicates-label {
+  flex: 1;
+}
+
+.duplicates-count {
+  background: rgba(255, 255, 255, 0.25);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.duplicates-list {
+  background: #f5f0f7;
+  padding: 8px;
+  border-radius: 0 0 8px 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.duplicate-group {
+  margin-bottom: 8px;
+}
+
+.duplicate-group:last-child {
+  margin-bottom: 0;
+}
+
+.duplicate-group-header {
+  font-size: 11px;
+  color: #7b1fa2;
+  padding: 4px 8px;
+  background: rgba(156, 39, 176, 0.1);
+  border-radius: 4px;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.duplicate-item {
+  padding: 6px 8px 6px 16px !important;
+  font-size: 12px;
+  background: white;
+  margin: 2px 0;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.duplicate-item:hover {
+  background: #ede7f0;
+}
+
+.duplicate-marker {
+  color: #9c27b0;
+  font-size: 10px;
+}
+

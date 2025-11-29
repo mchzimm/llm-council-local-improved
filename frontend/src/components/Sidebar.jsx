@@ -390,20 +390,50 @@ export default function Sidebar({
         <>
           <div className="separator" />
           {duplicateInfo && duplicateInfo.duplicate_groups > 0 && (
-            <button 
-              className="duplicate-cleanup-btn" 
-              onClick={handleDeleteDuplicates}
-              disabled={isDeletingDuplicates}
-              title={`Found ${duplicateInfo.duplicate_groups} group(s) of duplicate conversations`}
-            >
-              <span className="cleanup-icon">🧹</span>
-              <span className="cleanup-label">
-                {isDeletingDuplicates ? 'Cleaning...' : 'Clean Duplicates'}
-              </span>
-              <span className="duplicate-count">
-                {duplicateInfo.groups?.reduce((sum, g) => sum + g.conversations.length - 1, 0) || 0}
-              </span>
-            </button>
+            <>
+              <details className="duplicates-section">
+                <summary className="duplicates-header">
+                  <span className="duplicates-icon">📋</span>
+                  <span className="duplicates-label">Duplicates</span>
+                  <span className="duplicates-count">
+                    {duplicateInfo.groups?.reduce((sum, g) => sum + g.conversations.length - 1, 0) || 0}
+                  </span>
+                </summary>
+                <div className="duplicates-list">
+                  {duplicateInfo.groups?.map((group) => (
+                    <div key={group.signature} className="duplicate-group">
+                      <div className="duplicate-group-header">
+                        {group.query_count} query(ies): "{group.first_query.substring(0, 40)}..."
+                      </div>
+                      {group.conversations.slice(1).map((conv, idx) => (
+                        <div 
+                          key={conv.id} 
+                          className="conversation-item duplicate-item"
+                          onClick={() => onSelectConversation(conv.id)}
+                        >
+                          <span className="duplicate-marker">⤷</span>
+                          <span className="conversation-title">{conv.title}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </details>
+              <button 
+                className="duplicate-cleanup-btn" 
+                onClick={handleDeleteDuplicates}
+                disabled={isDeletingDuplicates}
+                title={`Found ${duplicateInfo.duplicate_groups} group(s) of duplicate conversations`}
+              >
+                <span className="cleanup-icon">🧹</span>
+                <span className="cleanup-label">
+                  {isDeletingDuplicates ? 'Cleaning...' : 'Clean Duplicates'}
+                </span>
+                <span className="duplicate-count">
+                  {duplicateInfo.groups?.reduce((sum, g) => sum + g.conversations.length - 1, 0) || 0}
+                </span>
+              </button>
+            </>
           )}
           <button 
             className="recycle-bin-btn" 

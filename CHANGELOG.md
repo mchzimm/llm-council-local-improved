@@ -4,6 +4,31 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.22.3
+**Branch:** `v0.22.3`  
+**Completed:** 2025-11-29 06:05 UTC | 2025-11-28 22:05 PST
+
+**Fixes:**
+- **Title Generation for Default Titles**: Fixed title generation not working at startup
+  - `_needs_title_generation()` now works with metadata-only conversation dicts
+  - Handles both `messages` array and `message_count` property
+  - Excludes deleted conversations from title generation
+  - Excludes duplicate conversations from title generation queue
+
+**Features:**
+- **Duplicates Collapsible Section**: Added collapsible section showing duplicate conversations
+  - Purple collapsible section above "Clean Duplicates" button
+  - Shows duplicate groups with first query preview
+  - Click to navigate to any duplicate conversation
+  - Collapsed by default
+
+**Changes:**
+- `backend/title_service.py` - Fixed `_needs_title_generation()`, exclude duplicates
+- `frontend/src/components/Sidebar.jsx` - Added duplicates section
+- `frontend/src/components/Sidebar.css` - Added duplicates styling
+
+---
+
 ### v0.22.2
 **Branch:** `v0.22.2`  
 **Completed:** 2025-11-29 05:58 UTC | 2025-11-28 21:58 PST

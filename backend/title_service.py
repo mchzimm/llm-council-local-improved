@@ -8,7 +8,12 @@ from typing import Dict, List, Optional, Set
 from dataclasses import dataclass
 from .config_loader import get_chairman_model, load_config
 from .lmstudio import query_model
-from .storage import get_conversation as load_conversation, update_conversation, list_conversations
+from .storage import (
+    get_conversation as load_conversation, 
+    update_conversation, 
+    list_conversations,
+    find_duplicate_conversations
+)
 
 @dataclass
 class TitleGenerationTask:
@@ -242,7 +247,7 @@ Title:"""
             return False
     
     async def queue_untitled_conversations(self):
-        """Queue all conversations that need titles."""
+        """Queue all conversations that need titles, excluding duplicates."""
         if not self.enabled:
             return
         
@@ -250,10 +255,27 @@ Title:"""
         conversations = list_conversations()
         queued_count = 0
         
+        # Get IDs of duplicate conversations (not the newest in each group)
+        duplicate_ids = set()
+        try:
+            duplicates = find_duplicate_conversations()
+            for sig, convs in duplicates.items():
+                # Skip the newest (first after sorting), mark rest as duplicates
+                for conv in convs[1:]:
+                    duplicate_ids.add(conv["id"])
+            if duplicate_ids:
+                print(f"Excluding {len(duplicate_ids)} duplicate conversations from title generation")
+        except Exception as e:
+            print(f"Warning: Could not check duplicates: {e}")
+        
         for conversation in conversations:
             try:
                 conv_id = conversation.get("id")
                 if not conv_id:
+                    continue
+                
+                # Skip duplicates
+                if conv_id in duplicate_ids:
                     continue
                     
                 if self._needs_title_generation(conversation):
@@ -265,16 +287,27 @@ Title:"""
         print(f"Queued {queued_count} conversations for title generation")
     
     def _needs_title_generation(self, conversation: Dict) -> bool:
-        """Check if conversation needs title generation."""
-        # Don't generate titles for empty conversations
-        messages = conversation.get("messages", [])
-        if not messages:
+        """Check if conversation needs title generation.
+        
+        Works with both full conversation dicts and metadata-only dicts.
+        """
+        # Don't generate titles for deleted conversations
+        if conversation.get("deleted", False):
             return False
         
-        # Check if there are any user messages
-        has_user_message = any(msg.get("role") == "user" for msg in messages)
-        if not has_user_message:
+        # Check for messages - handle both full conversation and metadata
+        messages = conversation.get("messages", [])
+        message_count = conversation.get("message_count", len(messages))
+        
+        if message_count == 0:
             return False
+        
+        # If we have the full messages array, check for user messages
+        if messages:
+            has_user_message = any(msg.get("role") == "user" for msg in messages)
+            if not has_user_message:
+                return False
+        # If we only have metadata with message_count > 0, assume there's user content
         
         title = conversation.get("title", "").strip()
         if not title:
