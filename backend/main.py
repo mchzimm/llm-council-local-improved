@@ -18,7 +18,8 @@ from .council import (
     stage3_synthesize_final, calculate_aggregate_rankings,
     stage1_collect_responses_streaming, stage2_collect_rankings_streaming,
     stage3_synthesize_streaming,
-    classify_message, chairman_direct_response, check_and_execute_tools
+    classify_message, chairman_direct_response, check_and_execute_tools,
+    assess_tool_needs_mid_deliberation
 )
 from .title_service import (
     get_title_service, 
@@ -704,6 +705,39 @@ async def send_message_stream_tokens(conversation_id: str, request: SendMessageR
                 yield f"data: {json.dumps({'type': event_type, **data})}\n\n"
             
             yield f"data: {json.dumps({'type': 'stage1_complete', 'data': stage1_results})}\n\n"
+            
+            # ===== MID-DELIBERATION TOOL ASSESSMENT (after Stage 1) =====
+            # Check if additional tools would help before Stage 2
+            # Only consider websearch for mid-deliberation (other tools should be used upfront)
+            stage1_summary = "\n".join([f"- {r.get('model', 'unknown')}: {r.get('response', '')[:200]}..." for r in stage1_results])
+            registry = get_mcp_registry()
+            available_tools = registry.format_tools_for_prompt() if registry.is_enabled() else ""
+            
+            previous_tools = [tool_result] if tool_result and tool_result.get('success') else []
+            mid_assessment = await assess_tool_needs_mid_deliberation(
+                request.content, "stage1", stage1_summary, available_tools, previous_tools
+            )
+            
+            mid_tool_results = []
+            if mid_assessment and mid_assessment.get('needs_tool'):
+                tool_name = mid_assessment.get('tool_name', '')
+                # Only execute websearch mid-deliberation (other tools should be used upfront)
+                if 'websearch' in tool_name.lower() or 'search' in tool_name.lower():
+                    yield f"data: {json.dumps({'type': 'mid_deliberation_tool_start', 'stage': 'stage1', 'tool': tool_name})}\n\n"
+                    
+                    try:
+                        # Execute websearch directly
+                        search_result = await registry.call_tool(
+                            'websearch.search',
+                            {'query': request.content}
+                        )
+                        
+                        if search_result and search_result.get('success'):
+                            mid_tool_results.append(search_result)
+                            yield f"data: {json.dumps({'type': 'mid_deliberation_tool_complete', 'stage': 'stage1', 'tool': tool_name, 'success': True})}\n\n"
+                    except Exception as e:
+                        print(f"[Mid-Deliberation] Tool execution failed: {e}")
+                        yield f"data: {json.dumps({'type': 'mid_deliberation_tool_complete', 'stage': 'stage1', 'tool': tool_name, 'success': False, 'error': str(e)})}\n\n"
 
             # Stage 2: Stream rankings with multi-round deliberation
             yield f"data: {json.dumps({'type': 'stage2_start'})}\n\n"
@@ -732,6 +766,35 @@ async def send_message_stream_tokens(conversation_id: str, request: SendMessageR
             
             aggregate_rankings = calculate_aggregate_rankings(stage2_results, label_to_model)
             yield f"data: {json.dumps({'type': 'stage2_complete', 'data': stage2_results, 'metadata': {'label_to_model': label_to_model, 'aggregate_rankings': aggregate_rankings, 'deliberation': deliberation_metadata}})}\n\n"
+            
+            # ===== MID-DELIBERATION TOOL ASSESSMENT (after Stage 2, before synthesis) =====
+            # Check if additional context would help the synthesis
+            stage2_summary = "\n".join([f"- {r.get('model', 'unknown')}: ranked responses" for r in stage2_results[:3]])
+            
+            # Combine all previous tool results
+            all_previous_tools = previous_tools + mid_tool_results
+            mid_assessment_2 = await assess_tool_needs_mid_deliberation(
+                request.content, "stage2", stage2_summary, available_tools, all_previous_tools
+            )
+            
+            if mid_assessment_2 and mid_assessment_2.get('needs_tool'):
+                tool_name = mid_assessment_2.get('tool_name', '')
+                # Only execute websearch mid-deliberation
+                if 'websearch' in tool_name.lower() or 'search' in tool_name.lower():
+                    yield f"data: {json.dumps({'type': 'mid_deliberation_tool_start', 'stage': 'stage2', 'tool': tool_name})}\n\n"
+                    
+                    try:
+                        search_result = await registry.call_tool(
+                            'websearch.search',
+                            {'query': request.content}
+                        )
+                        
+                        if search_result and search_result.get('success'):
+                            mid_tool_results.append(search_result)
+                            yield f"data: {json.dumps({'type': 'mid_deliberation_tool_complete', 'stage': 'stage2', 'tool': tool_name, 'success': True})}\n\n"
+                    except Exception as e:
+                        print(f"[Mid-Deliberation] Tool execution failed: {e}")
+                        yield f"data: {json.dumps({'type': 'mid_deliberation_tool_complete', 'stage': 'stage2', 'tool': tool_name, 'success': False, 'error': str(e)})}\n\n"
 
             # Stage 3: Stream final synthesis
             yield f"data: {json.dumps({'type': 'stage3_start'})}\n\n"

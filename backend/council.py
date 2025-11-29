@@ -681,51 +681,8 @@ JSON response:"""
         result = _extract_json_from_response(content)
         
         if result and 'expectations' in result:
-            # Post-process: Fix common LLM mistakes for calculation queries
-            # LLMs sometimes say "needs_external_data: false" for simple math
-            query_lower = user_query.lower()
-            
-            # Word-based math indicators (safe, won't cause false positives)
-            word_math_indicators = ['plus', 'minus', 'times', 'divided', 'multiply', 'add', 'subtract',
-                              'calculate', 'compute', 'sum', 'difference',
-                              'product', 'quotient', 'how much is']
-            
-            # Check for word-based math indicators
-            has_numbers = any(c.isdigit() for c in user_query)
-            has_word_math = any(indicator in query_lower for indicator in word_math_indicators)
-            
-            # Check for operator-based math (must be adjacent to numbers to avoid "and/or" false positives)
-            # Pattern: number followed by operator followed by number (with optional spaces)
-            import re
-            has_operator_math = bool(re.search(r'\d\s*[+\-*/×÷]\s*\d', user_query))
-            
-            # Also check for "what is <number>" pattern which often indicates calculation
-            has_what_is_number = bool(re.search(r'what is\s+\d', query_lower))
-            
-            has_math = has_word_math or has_operator_math or has_what_is_number
-            
-            if has_numbers and has_math:
-                # Override LLM if it incorrectly said no external data needed for math
-                if not result.get('needs_external_data', False) or 'calculation' not in result.get('data_types_needed', []):
-                    print(f"[Expectations] Override: Math query detected, forcing calculation tool")
-                    result['needs_external_data'] = True
-                    result['data_types_needed'] = ['calculation']
-            
-            # Override for news/current events queries
-            news_indicators = ['this week', 'today', 'latest', 'recent', 'current', 'news', 
-                              'what happened', 'what\'s happening', 'events', 'headlines']
-            time_sensitive_words = ['week', 'today', 'yesterday', 'month', 'year', 'now', 
-                                   '2024', '2025', 'current', 'recent', 'latest']
-            
-            has_news_indicator = any(indicator in query_lower for indicator in news_indicators)
-            has_time_sensitive = any(word in query_lower for word in time_sensitive_words)
-            
-            if has_news_indicator and has_time_sensitive:
-                if not result.get('needs_external_data', False) or 'news' not in result.get('data_types_needed', []):
-                    print(f"[Expectations] Override: News/current events query detected, forcing websearch")
-                    result['needs_external_data'] = True
-                    result['data_types_needed'] = ['news']
-            
+            # Trust the LLM's analysis - no pattern-matching overrides
+            # The LLM prompt is comprehensive enough to handle math, news, etc.
             print(f"[Expectations] {result.get('expectations', [])}, needs_external: {result.get('needs_external_data')}, data_types: {result.get('data_types_needed', [])}")
             return result
         return None
@@ -926,6 +883,100 @@ async def _phase1_analyze_query(user_query: str, detailed_tool_info: str) -> Opt
             "reasoning": tool_eval.get('reasoning', 'No tool meets confidence threshold'),
             "confidence": confidence
         }
+
+
+async def assess_tool_needs_mid_deliberation(
+    user_query: str,
+    stage_name: str,
+    stage_output: str,
+    available_tools: str,
+    previous_tool_results: Optional[List[Dict[str, Any]]] = None
+) -> Optional[Dict[str, Any]]:
+    """
+    Assess whether additional tool calls would help after a deliberation stage.
+    
+    This is called after Stage 1 and Stage 2 to determine if the council
+    would benefit from additional data before proceeding.
+    
+    Args:
+        user_query: The original user question
+        stage_name: "stage1" or "stage2"
+        stage_output: Summary of what the stage produced
+        available_tools: Description of available MCP tools
+        previous_tool_results: Any tool results already obtained
+        
+    Returns:
+        Dict with 'needs_tool', 'tool_name', 'reasoning', 'arguments' or None
+    """
+    tool_model = get_tool_calling_model()
+    
+    # Format previous tool results if any
+    prev_results_text = ""
+    if previous_tool_results:
+        prev_results_text = "\n\nPREVIOUS TOOL RESULTS:\n"
+        for result in previous_tool_results:
+            tool_name = result.get('tool', 'unknown')
+            output = result.get('output', '')
+            prev_results_text += f"- {tool_name}: {str(output)[:500]}...\n"
+    
+    assessment_prompt = f"""You are evaluating whether additional tool calls would improve the council's response.
+
+USER QUERY: {user_query}
+
+CURRENT STAGE: {stage_name}
+STAGE OUTPUT SUMMARY: {stage_output[:1000]}...
+{prev_results_text}
+
+AVAILABLE TOOLS:
+{available_tools}
+
+Assess whether the current responses would benefit from additional data that a tool could provide.
+
+IMPORTANT RULES:
+1. Only recommend a tool if the responses are CLEARLY missing crucial information
+2. Do NOT recommend tools for general knowledge questions (capitals, definitions, history, nutrition advice, etc.)
+3. DO recommend websearch if responses mention "I don't have current information" or similar limitations
+4. DO recommend websearch if the query asks about recent events and responses lack specific data
+5. Do NOT recommend calculator unless there is an actual mathematical calculation needed
+6. If previous tools already provided relevant data, do NOT request more tools
+
+Respond with ONLY a JSON object:
+{{
+  "needs_additional_tool": true/false,
+  "recommended_tool": "tool.name" or null,
+  "reasoning": "brief explanation",
+  "arguments": {{}} or null
+}}
+
+JSON response:"""
+
+    messages = [{"role": "user", "content": assessment_prompt}]
+    
+    try:
+        response = await query_model_with_retry(tool_model, messages, timeout=30.0, max_retries=1)
+        if not response or not response.get('content'):
+            return None
+        
+        content = response['content'].strip()
+        result = _extract_json_from_response(content)
+        
+        if result and 'needs_additional_tool' in result:
+            if result.get('needs_additional_tool') and result.get('recommended_tool'):
+                print(f"[Mid-Deliberation Assessment] Tool recommended: {result.get('recommended_tool')}")
+                return {
+                    "needs_tool": True,
+                    "tool_name": result['recommended_tool'],
+                    "reasoning": result.get('reasoning', ''),
+                    "arguments": result.get('arguments', {})
+                }
+            else:
+                print(f"[Mid-Deliberation Assessment] No additional tools needed: {result.get('reasoning', '')}")
+                return {"needs_tool": False, "reasoning": result.get('reasoning', '')}
+        
+        return None
+    except Exception as e:
+        print(f"[Mid-Deliberation Assessment] Error: {e}")
+        return None
 
 
 def _parse_calculator_query(query: str) -> Optional[Dict[str, Any]]:

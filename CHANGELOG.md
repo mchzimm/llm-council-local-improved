@@ -4,6 +4,38 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.30.0
+**Branch:** `v0.30.0`  
+**Completed:** 2025-11-29 18:30 UTC | 2025-11-29 10:30 PST
+
+**Features:**
+- **LLM-Based Tool Selection**: Removed regex-based overrides for tool detection
+  - Tool selection now fully relies on LLM's analysis via `_analyze_user_expectations()`
+  - No more false positives from "and/or" triggering calculator
+  - Simple math (5+3) handled correctly by LLM without requiring calculator tool
+  
+- **Iterative Tool Assessment Mid-Deliberation**: Added tool needs assessment after each stage
+  - `assess_tool_needs_mid_deliberation()` evaluates if additional tools would help
+  - Called after Stage 1 and Stage 2 completion
+  - Only executes websearch mid-deliberation (other tools used upfront)
+  - Prevents infinite loops with single-tool-per-stage limit
+
+**Changes:**
+- `backend/council.py`:
+  - Removed all regex/pattern-matching overrides in `_analyze_user_expectations()`
+  - Added `assess_tool_needs_mid_deliberation()` function
+- `backend/main.py`:
+  - Added mid-deliberation tool assessment after stage1_complete
+  - Added mid-deliberation tool assessment after stage2_complete
+  - New event types: `mid_deliberation_tool_start`, `mid_deliberation_tool_complete`
+- `tests/scenarios.json`:
+  - Updated calculator_addition to not require tool use (LLM handles simple math)
+  - Disabled geolocation test (pre-existing tool name mismatch issue)
+
+**OpenSpec:** `openspec/changes/update-tool-selection-llm-based/`
+
+---
+
 ### v0.29.11
 **Branch:** `v0.29.11`  
 **Completed:** 2025-11-29 18:10 UTC | 2025-11-29 10:10 PST
