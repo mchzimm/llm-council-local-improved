@@ -4,6 +4,21 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.22.4
+**Branch:** `v0.22.4`  
+**Completed:** 2025-11-29 06:10 UTC | 2025-11-28 22:10 PST
+
+**Fixes:**
+- **Hide Duplicates from Main List**: Duplicate conversations are now only shown in the collapsible Duplicates section
+  - Main conversation list filters out duplicate IDs
+  - Uses `filteredConversations` computed from `duplicateInfo`
+  - Keeps first/newest conversation in main list, shows rest in Duplicates section
+
+**Changes:**
+- `frontend/src/components/Sidebar.jsx` - Filter duplicates from main list
+
+---
+
 ### v0.22.3
 **Branch:** `v0.22.3`  
 **Completed:** 2025-11-29 06:05 UTC | 2025-11-28 22:05 PST

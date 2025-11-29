@@ -194,6 +194,20 @@ export default function Sidebar({
 
   const recycleBinCount = deletedConversations.length;
 
+  // Get IDs of duplicate conversations (not the first/newest in each group)
+  const duplicateIds = new Set();
+  if (duplicateInfo?.groups) {
+    duplicateInfo.groups.forEach(group => {
+      // Skip first conversation (newest), mark rest as duplicates
+      group.conversations.slice(1).forEach(conv => {
+        duplicateIds.add(conv.id);
+      });
+    });
+  }
+
+  // Filter conversations to exclude duplicates (they're shown in duplicates section)
+  const filteredConversations = conversations.filter(conv => !duplicateIds.has(conv.id));
+
   // Get tools for a specific server
   const getServerTools = (serverName) => {
     if (!mcpStatus?.tool_details) return [];
@@ -296,12 +310,12 @@ export default function Sidebar({
 
       <div className="conversation-list">
         {!isRecycleBinView ? (
-          // Active conversations view
+          // Active conversations view (excluding duplicates which are shown separately)
           <>
-            {conversations.length === 0 ? (
+            {filteredConversations.length === 0 ? (
               <div className="no-conversations">No conversations yet</div>
             ) : (
-              conversations.map((conv) => {
+              filteredConversations.map((conv) => {
                 const status = titleGenerationStatus[conv.id];
                 const isGeneratingTitle = conv.titleGenerating || (status?.status && 
                   ['generating_immediate', 'thinking_immediate'].includes(status.status));
