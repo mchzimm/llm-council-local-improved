@@ -67,8 +67,8 @@ async def run_graphiti_test():
         await registry.shutdown()
         return False
     
-    # Test group ID
-    test_group = "main"
+    # Test group ID - separate from production to avoid data conflicts
+    test_group = "test_graphiti"
     
     # Clear existing data first
     print(f"\n[3/7] Clearing existing graph data...")

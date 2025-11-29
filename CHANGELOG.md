@@ -4,6 +4,35 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.20.1
+**Branch:** `v0.20.1`  
+**Completed:** 2025-11-29 01:05 UTC | 2025-11-28 17:05 PST
+
+**Features:**
+- **Graphiti Test Runner Script**: New `run_graphiti_test.sh` for running Graphiti tests
+  - Automatically starts/restarts Graphiti MCP server with latest config
+  - Waits for server health before running tests
+  - Reports test results with helpful diagnostics
+
+**Fixes:**
+- **Separate Test Database**: Graphiti tests now use `test_graphiti` group_id
+  - Prevents test data from conflicting with production LLM Council data
+  - LLM Council uses `llm_council` group_id, tests use `test_graphiti`
+
+- **Test Scenarios Updated**: Enabled more test scenarios and fixed assertions
+  - `current_news_websearch` - Verified working
+  - `current_date_tool` - Verified working  
+  - `factual_capital` - Fixed min_length assertion
+  - `chat_greeting` - Verified working
+  - `real_time_data_awareness` - Verified working
+
+**Changes:**
+- `run_graphiti_test.sh` - New test runner script
+- `tests/test_graphiti.py` - Changed group_id to `test_graphiti`
+- `tests/scenarios.json` - Enabled core tests, fixed assertions
+
+---
+
 ### v0.20.0
 **Branch:** `v0.20.0`  
 **Completed:** 2025-11-29 00:45 UTC | 2025-11-28 16:45 PST
