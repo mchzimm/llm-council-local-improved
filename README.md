@@ -17,7 +17,10 @@ In a bit more detail, here is what happens when you submit a query:
 
 ## Key Features
 
-### Current Release (v0.22.0)
+### Current Release (v0.23.0)
+- **MCP Tool Execution Time**: Display execution time for MCP tool calls in tool result card
+
+### Previous Release (v0.22.0)
 - **Duplicate Conversation Cleanup**: UI button to find and delete duplicate conversations
   - Automatically detects conversations with identical user queries (same count and content)
   - "Clean Duplicates" button appears in sidebar when duplicates exist

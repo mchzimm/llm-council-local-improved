@@ -4,6 +4,26 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.23.0
+**Branch:** `v0.23.0`  
+**Completed:** 2025-11-29 06:35 UTC | 2025-11-28 22:35 PST
+
+**Features:**
+- **MCP Tool Execution Time**: Display execution time for MCP tool calls
+  - Track execution time in `mcp/registry.py` `call_tool()` method
+  - Include `execution_time_seconds` in tool result events
+  - Display execution time in tool result card header (e.g., "2.5s")
+  - Styled with subtle badge in header
+
+**Changes:**
+- `backend/mcp/registry.py` - Track and return execution time
+- `backend/council.py` - Include execution_time_seconds in tool_result event
+- `frontend/src/App.jsx` - Store executionTime in toolResult
+- `frontend/src/components/ChatInterface.jsx` - Display execution time in tool card
+- `frontend/src/components/Stage1.css` - Style for tool-time badge
+
+---
+
 ### v0.22.7
 **Branch:** `v0.22.7`  
 **Completed:** 2025-11-29 06:30 UTC | 2025-11-28 22:30 PST

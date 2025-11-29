@@ -191,6 +191,15 @@
 .tool-name {
   font-family: monospace;
   font-size: 14px;
+  flex: 1;
+}
+
+.tool-time {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: normal;
 }
 
 .tool-result-body {

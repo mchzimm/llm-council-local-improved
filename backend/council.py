@@ -1790,7 +1790,8 @@ async def stage1_collect_responses_streaming(
             "input": tool_result.get('input'),
             "output": tool_result.get('output'),
             "formatted": tool_context,
-            "tool_failed": tool_failed
+            "tool_failed": tool_failed,
+            "execution_time_seconds": tool_result.get('execution_time_seconds')
         })
     
     # Get response config for max_tokens

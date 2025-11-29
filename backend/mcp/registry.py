@@ -265,6 +265,8 @@ class MCPRegistry:
     
     async def call_tool(self, full_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Call a tool by its full name (server.tool)."""
+        import time
+        
         if full_name not in self.all_tools:
             return {"error": f"Unknown tool: {full_name}"}
         
@@ -278,22 +280,27 @@ class MCPRegistry:
         self.tools_in_use[full_name] = True
         self.server_status[tool.server_name] = "busy"
         
+        start_time = time.time()
         try:
             result = await client.call_tool(tool.name, arguments)
+            execution_time = round(time.time() - start_time, 3)
             return {
                 "success": True,
                 "server": tool.server_name,
                 "tool": tool.name,
                 "input": arguments,
-                "output": result
+                "output": result,
+                "execution_time_seconds": execution_time
             }
         except Exception as e:
+            execution_time = round(time.time() - start_time, 3)
             return {
                 "success": False,
                 "server": tool.server_name,
                 "tool": tool.name,
                 "input": arguments,
-                "error": str(e)
+                "error": str(e),
+                "execution_time_seconds": execution_time
             }
         finally:
             # Mark tool as no longer in use

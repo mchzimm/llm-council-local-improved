@@ -377,6 +377,7 @@ function App() {
                 tool: event.tool,
                 input: event.input,
                 output: event.output,
+                executionTime: event.execution_time_seconds,
               };
               return { ...prev, messages };
             });
@@ -874,6 +875,7 @@ function App() {
               tool: event.tool,
               input: event.input,
               output: event.output,
+              executionTime: event.execution_time_seconds,
             };
             return { ...prev, messages };
           });

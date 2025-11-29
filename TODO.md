@@ -8,12 +8,6 @@ This file tracks pending changes organized by priority. AI agents should process
 ## Next
 <!-- Items queued for implementation after Current is complete. Maximum 5 items. -->
 
-- [ ] **[FEATURE]** Add MCP call metrics overlay on response hover
-  - Show overlay when cursor hovers response area
-  - Display: servers/tools used, inputs, truncated outputs, execution time
-  - Similar to existing overlay pattern used for titles
-  - Files: `frontend/src/components/Stage3.jsx`, `frontend/src/App.jsx`
-
 ## Future
 <!-- Ideas and enhancements for later consideration. No limit. -->
 

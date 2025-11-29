@@ -142,6 +142,9 @@ export default function ChatInterface({
                       <div className="tool-result-header">
                         <span className="tool-icon">🔧</span>
                         <span className="tool-name">MCP Tool: {(msg.toolResult || msg.tool_result).tool || `${(msg.toolResult || msg.tool_result).server}.${(msg.toolResult || msg.tool_result).tool}`}</span>
+                        {(msg.toolResult || msg.tool_result).executionTime !== undefined && (
+                          <span className="tool-time">{(msg.toolResult || msg.tool_result).executionTime}s</span>
+                        )}
                       </div>
                       <div className="tool-result-body">
                         <div className="tool-io">
