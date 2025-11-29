@@ -4,6 +4,23 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.29.6
+**Branch:** `v0.29.6`  
+**Completed:** 2025-11-29 16:56 UTC | 2025-11-29 08:56 PST
+
+**Fixes:**
+- **App Startup Flicker (Full Fix)**: Fixed app showing normal view briefly before loading
+  - Previous fix (v0.29.5) still showed sidebar and partial UI during initialization
+  - Now shows full-screen "Loading LLM Council..." spinner until initialization complete
+  - Loads conversation data synchronously during init before showing any UI
+  - Prevents any content from rendering until app is fully ready
+
+**Changes:**
+- `frontend/src/App.jsx` - Add `isInitializing` state, load conversation during init
+- `frontend/src/App.css` - Add `.app-loading`, `.init-loading`, `.init-spinner` styles
+
+---
+
 ### v0.29.5
 **Branch:** `v0.29.5`  
 **Completed:** 2025-11-29 16:52 UTC | 2025-11-29 08:52 PST

@@ -9,6 +9,7 @@ function App() {
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [currentConversation, setCurrentConversation] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [titleGenerationStatus, setTitleGenerationStatus] = useState({}); // conversation_id -> status
 
   // Load conversations on mount and restore last viewed conversation
@@ -20,10 +21,19 @@ function App() {
       const lastConversationId = localStorage.getItem('lastConversationId');
       if (lastConversationId && convs?.some(c => c.id === lastConversationId)) {
         setCurrentConversationId(lastConversationId);
+        // Load the conversation before showing the app
+        try {
+          const conv = await api.getConversation(lastConversationId);
+          setCurrentConversation(conv);
+        } catch (error) {
+          console.error('Failed to restore conversation:', error);
+          localStorage.removeItem('lastConversationId');
+        }
       } else if (lastConversationId) {
         // Conversation was deleted, clear stale reference
         localStorage.removeItem('lastConversationId');
       }
+      setIsInitializing(false);
     };
     initializeApp();
   }, []);
@@ -1231,6 +1241,18 @@ function App() {
       setIsLoading(false);
     }
   };
+
+  // Show loading screen while initializing
+  if (isInitializing) {
+    return (
+      <div className="app app-loading">
+        <div className="init-loading">
+          <div className="init-spinner"></div>
+          <p>Loading LLM Council...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app">
