@@ -4,6 +4,27 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.29.0
+**Branch:** `v0.29.0`  
+**Completed:** 2025-11-29 15:15 UTC | 2025-11-29 07:15 PST
+
+**Features:**
+- **Collapsible Multi-Step Tool Calls**: New UI component for displaying multiple tool calls in sequence
+  - Collapsed by default with summary showing tool count and total execution time
+  - Expandable header shows tool pipeline flow (e.g., "web-search → firecrawl-scrape")
+  - Individual tool steps can be expanded to show input/output details
+  - Live status indicators for in-progress tool calls
+  - Supports deep research workflow with multiple tool invocations
+  - Works alongside existing single-tool result card (backward compatible)
+
+**Changes:**
+- `frontend/src/components/ToolSteps.jsx` - New collapsible tool steps component
+- `frontend/src/components/ToolSteps.css` - Styling for tool steps accordion
+- `frontend/src/components/ChatInterface.jsx` - Integrate ToolSteps component
+- `frontend/src/App.jsx` - Handle `tool_call_start` and `tool_call_complete` events
+
+---
+
 ### v0.28.0
 **Branch:** `v0.28.0`  
 **Completed:** 2025-11-29 15:10 UTC | 2025-11-29 07:10 PST

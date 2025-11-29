@@ -1,0 +1,233 @@
+/* Tool Steps - Collapsible multi-step tool call display */
+
+.tool-steps {
+  margin-bottom: 16px;
+  border: 2px solid #7c4dff;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #ede7f6 0%, #ffffff 100%);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.tool-steps.expanded {
+  box-shadow: 0 2px 8px rgba(124, 77, 255, 0.2);
+}
+
+/* Header - clickable to expand/collapse */
+.tool-steps-header {
+  padding: 12px 16px;
+  background: #7c4dff;
+  color: white;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+}
+
+.tool-steps-header:hover {
+  background: #6a3de8;
+}
+
+.tool-steps-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.tool-steps-icon {
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+
+.tool-steps-label {
+  font-size: 14px;
+}
+
+.tool-steps-count {
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.tool-steps-count .in-progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mini-spinner {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.tool-steps-time {
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: auto;
+}
+
+.tool-steps-preview {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 4px;
+  padding-left: 20px;
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Content area - individual steps */
+.tool-steps-content {
+  padding: 8px;
+}
+
+.tool-step {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.tool-step:last-child {
+  margin-bottom: 0;
+}
+
+.tool-step.running {
+  border-color: #ffab40;
+  animation: pulse-border 1.5s infinite;
+}
+
+@keyframes pulse-border {
+  0%, 100% { border-color: #ffab40; }
+  50% { border-color: #ff9100; }
+}
+
+.tool-step.error {
+  border-color: #ff5252;
+  background: #fff5f5;
+}
+
+/* Step header */
+.tool-step-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #fafafa;
+  border-bottom: 1px solid #e0e0e0;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.tool-step-header:hover {
+  background: #f0f0f0;
+}
+
+.step-expand-icon {
+  font-size: 9px;
+  color: #666;
+  width: 12px;
+}
+
+.step-number {
+  background: #7c4dff;
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.step-status-icon {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+}
+
+.step-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #e0e0e0;
+  border-top-color: #ffab40;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.step-tool-name {
+  font-family: monospace;
+  font-size: 13px;
+  color: #333;
+  flex: 1;
+}
+
+.step-time {
+  font-size: 11px;
+  color: #666;
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+/* Step details - expandable */
+.tool-step-details {
+  padding: 12px;
+  background: #f9f9f9;
+  border-top: 1px dashed #e0e0e0;
+}
+
+.step-io {
+  margin-bottom: 10px;
+}
+
+.step-io:last-child {
+  margin-bottom: 0;
+}
+
+.step-io-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #7c4dff;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.step-io-value {
+  display: block;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-family: 'Monaco', 'Menlo', monospace;
+  color: #333;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.step-error .step-io-value {
+  background: #ffebee;
+  border-color: #ff5252;
+  color: #c62828;
+}

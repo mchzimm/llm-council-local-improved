@@ -17,7 +17,15 @@ In a bit more detail, here is what happens when you submit a query:
 
 ## Key Features
 
-### Current Release (v0.28.0)
+### Current Release (v0.29.0)
+- **Collapsible Multi-Step Tool Calls**: Compact UI for displaying multiple tool call sequences
+  - Collapsed by default with summary showing tool count and total execution time
+  - Expandable header shows tool pipeline flow (e.g., "web-search → firecrawl-scrape")
+  - Individual tool steps can be expanded to show input/output details
+  - Live status indicators for in-progress tool calls
+  - Supports deep research workflow with multiple tool invocations
+
+### Previous Release (v0.28.0)
 - **Enhanced Markdown Rendering**: Full support for rich content in council responses
   - GitHub Flavored Markdown (tables, strikethrough, task lists)
   - Syntax highlighted code blocks with language labels

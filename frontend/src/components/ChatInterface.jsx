@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import MarkdownRenderer from './MarkdownRenderer';
+import ToolSteps from './ToolSteps';
 import Stage1 from './Stage1';
 import Stage2 from './Stage2';
 import Stage3 from './Stage3';
@@ -235,9 +236,16 @@ export default function ChatInterface({
                     </div>
                   )}
 
-                  {/* Tool result card - shown for both direct and deliberation responses */}
-                  {/* Check both toolResult (streaming) and tool_result (stored) */}
-                  {(msg.toolResult || msg.tool_result) && (() => {
+                  {/* Multi-step tool calls - collapsible area */}
+                  {(msg.toolSteps && msg.toolSteps.length > 0) && (
+                    <ToolSteps 
+                      toolSteps={msg.toolSteps}
+                    />
+                  )}
+
+                  {/* Single tool result card - for backward compatibility when no toolSteps */}
+                  {/* Only show if toolResult exists but no toolSteps (legacy format) */}
+                  {(msg.toolResult || msg.tool_result) && (!msg.toolSteps || msg.toolSteps.length === 0) && (() => {
                     const toolData = msg.toolResult || msg.tool_result;
                     const toolName = toolData.tool || `${toolData.server}.${toolData.tool}`;
                     const execTime = toolData.executionTime;

@@ -390,8 +390,54 @@ function App() {
             });
             break;
 
+          case 'tool_call_start':
+            // Tool call starting - add to tool steps array
+            setCurrentConversation((prev) => {
+              const messages = [...prev.messages];
+              const lastMsg = messages[messages.length - 1];
+              if (!lastMsg.toolSteps) lastMsg.toolSteps = [];
+              // Add new step in 'running' state
+              lastMsg.toolSteps = [
+                ...lastMsg.toolSteps,
+                {
+                  tool: event.tool,
+                  input: event.arguments,
+                  status: 'running',
+                  startTime: Date.now(),
+                },
+              ];
+              return { ...prev, messages };
+            });
+            break;
+
+          case 'tool_call_complete':
+            // Tool call completed - update step with output
+            setCurrentConversation((prev) => {
+              const messages = [...prev.messages];
+              const lastMsg = messages[messages.length - 1];
+              if (lastMsg.toolSteps && lastMsg.toolSteps.length > 0) {
+                // Find the running step for this tool and update it
+                const stepIndex = lastMsg.toolSteps.findIndex(
+                  (s) => s.tool === event.tool && s.status === 'running'
+                );
+                if (stepIndex !== -1) {
+                  const step = lastMsg.toolSteps[stepIndex];
+                  const endTime = Date.now();
+                  lastMsg.toolSteps[stepIndex] = {
+                    ...step,
+                    status: event.result?.success !== false ? 'complete' : 'error',
+                    output: event.result?.output,
+                    error: event.result?.error,
+                    executionTime: (endTime - step.startTime) / 1000,
+                  };
+                }
+              }
+              return { ...prev, messages };
+            });
+            break;
+
           case 'tool_result':
-            // MCP tool was used, store the result
+            // MCP tool was used, store the result (for backward compatibility)
             setCurrentConversation((prev) => {
               const messages = [...prev.messages];
               const lastMsg = messages[messages.length - 1];
@@ -888,8 +934,52 @@ function App() {
           });
           break;
 
+        case 'tool_call_start':
+          // Tool call starting - add to tool steps array
+          setCurrentConversation((prev) => {
+            const messages = [...prev.messages];
+            const lastMsg = messages[messages.length - 1];
+            if (!lastMsg.toolSteps) lastMsg.toolSteps = [];
+            lastMsg.toolSteps = [
+              ...lastMsg.toolSteps,
+              {
+                tool: event.tool,
+                input: event.arguments,
+                status: 'running',
+                startTime: Date.now(),
+              },
+            ];
+            return { ...prev, messages };
+          });
+          break;
+
+        case 'tool_call_complete':
+          // Tool call completed - update step with output
+          setCurrentConversation((prev) => {
+            const messages = [...prev.messages];
+            const lastMsg = messages[messages.length - 1];
+            if (lastMsg.toolSteps && lastMsg.toolSteps.length > 0) {
+              const stepIndex = lastMsg.toolSteps.findIndex(
+                (s) => s.tool === event.tool && s.status === 'running'
+              );
+              if (stepIndex !== -1) {
+                const step = lastMsg.toolSteps[stepIndex];
+                const endTime = Date.now();
+                lastMsg.toolSteps[stepIndex] = {
+                  ...step,
+                  status: event.result?.success !== false ? 'complete' : 'error',
+                  output: event.result?.output,
+                  error: event.result?.error,
+                  executionTime: (endTime - step.startTime) / 1000,
+                };
+              }
+            }
+            return { ...prev, messages };
+          });
+          break;
+
         case 'tool_result':
-          // MCP tool was used, store the result
+          // MCP tool was used, store the result (for backward compatibility)
           setCurrentConversation((prev) => {
             const messages = [...prev.messages];
             const lastMsg = messages[messages.length - 1];

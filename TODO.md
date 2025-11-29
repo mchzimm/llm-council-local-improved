@@ -8,11 +8,6 @@ This file tracks pending changes organized by priority. AI agents should process
 ## Next
 <!-- Items queued for implementation after Current is complete. Maximum 5 items. -->
 
-- [ ] **[FEATURE]** Multi-step tool calls collapsible area
-  - Show each step as separate MCP tool purple area
-  - Within a collapsible area that expands while running
-  - Collapse once all tool call steps are completed
-
 ## Future
 <!-- Ideas and enhancements for later consideration. No limit. -->
 
