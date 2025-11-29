@@ -17,7 +17,16 @@ In a bit more detail, here is what happens when you submit a query:
 
 ## Key Features
 
-### Current Release (v0.20.0)
+### Current Release (v0.21.0)
+- **LLM-Based Tool Confidence Routing**: Intelligent tool selection using expectation analysis
+  - Step 1: LLM analyzes user expectations and determines data types needed
+  - Step 2: Deterministic mapping from data types to appropriate tools
+  - Replaces hardcoded keyword lists (WEBSEARCH_KEYWORDS, GEOLOCATION_KEYWORDS)
+  - Data type mappings: current_time, location, news, weather, calculation, web_content
+  - Confidence threshold (0.5) for tool selection decisions
+  - More flexible and extensible than keyword matching
+
+### Previous Release (v0.20.0)
 - **Graphiti Memory Integration**: Persistent memory with confidence-based fast-path responses
   - Records all messages (user, council members, chairman) to Graphiti knowledge graph
   - Memory-based response path when confidence exceeds configurable threshold (default 80%)

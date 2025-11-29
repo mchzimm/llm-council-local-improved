@@ -84,11 +84,19 @@ Format:
 After each completed change:
 1. **CHANGELOG.md** - Add entry with version, branch, timestamps (UTC + local)
 2. **FINDINGS.md** - Document lessons learned and discoveries
-3. **README.md** - **MANDATORY for features**: Update Key Features section with new feature description
-   - For NEW features: Add entry under "Current Release" section
+3. **⚠️ README.md - MANDATORY FOR ALL FEATURES** 
+   - **DO NOT SKIP THIS STEP** - Features without README updates are incomplete
+   - For NEW features: Add entry under "Current Release" section (shift previous to "Previous Release")
    - For FIX to existing feature: Update the relevant feature description if behavior changed
-   - Features MUST be documented before merge - do not skip this step
+   - Include: Feature name, bullet points describing capability, key technical details
+   - Verify README was updated BEFORE committing
 4. **TODO.md** - Remove completed item, move next item to Current
+
+**README Update Checklist (verify before commit):**
+- [ ] "Current Release" section has new/updated entry for this version
+- [ ] Previous "Current Release" moved to "Previous Release" 
+- [ ] Feature description includes user-visible capabilities
+- [ ] Technical implementation details mentioned (tools, APIs, thresholds, etc.)
 
 ## Project Overview
 
@@ -280,7 +288,13 @@ git checkout -b v<new-version>  # e.g., git checkout -b v0.4.0
 uv run -m tests.test_runner  # All tests MUST pass before committing
 ```
 
-**Step 5: Commit Changes**
+**Step 5: Update Documentation (BEFORE committing)**
+⚠️ **MANDATORY for features - do NOT skip:**
+- [ ] **README.md**: Update "Current Release" section with new feature
+- [ ] **CHANGELOG.md**: Add version entry with timestamps
+- [ ] **FINDINGS.md**: Document any discoveries or lessons learned
+
+**Step 6: Commit Changes**
 ```bash
 git add -A
 git commit -m "v<version>: <brief description of changes>"

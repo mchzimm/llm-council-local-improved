@@ -4,6 +4,27 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.21.1
+**Branch:** `v0.21.1`  
+**Completed:** 2025-11-29 03:10 UTC | 2025-11-28 19:10 PST
+
+**Documentation:**
+- **README.md Update**: Added v0.21.0 feature documentation (was missing)
+  - Added "Current Release (v0.21.0)" section for LLM-Based Tool Confidence Routing
+  - Moved previous v0.20.0 to "Previous Release" section
+
+- **AGENTS.md Improvements**: Made README updates more prominent to prevent future misses
+  - Added warning symbols and "DO NOT SKIP" emphasis
+  - Added README Update Checklist before commit
+  - Added Step 5 "Update Documentation" in Versioning Process (before commit step)
+  - Made README update a mandatory step with verification checklist
+
+**Changes:**
+- `README.md` - Added v0.21.0 feature documentation
+- `AGENTS.md` - Enhanced README update instructions
+
+---
+
 ### v0.21.0
 **Branch:** `v0.21.0`  
 **Completed:** 2025-11-29 03:00 UTC | 2025-11-28 19:00 PST
