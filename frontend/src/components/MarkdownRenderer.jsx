@@ -3,8 +3,103 @@ import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import './MarkdownRenderer.css';
+
+// Image component with error handling and hover preview
+function SmartImage({ src, alt, ...props }) {
+  const [imageStatus, setImageStatus] = useState('loading'); // 'loading' | 'loaded' | 'error'
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewPosition, setPreviewPosition] = useState({ x: 0, y: 0 });
+  const containerRef = useRef(null);
+
+  // Check if the URL looks like a placeholder/fake image
+  const isFakeUrl = useCallback((url) => {
+    if (!url) return true;
+    const fakePatterns = [
+      /via\.placeholder\.com/i,
+      /placeholder\./i,
+      /example\.com/i,
+      /\?text=/i,
+      /placehold\.it/i,
+      /placekitten/i,
+      /dummyimage/i,
+    ];
+    return fakePatterns.some(pattern => pattern.test(url));
+  }, []);
+
+  useEffect(() => {
+    if (isFakeUrl(src)) {
+      setImageStatus('error');
+      return;
+    }
+
+    // Test if the image can actually load
+    const img = new Image();
+    img.onload = () => setImageStatus('loaded');
+    img.onerror = () => setImageStatus('error');
+    img.src = src;
+  }, [src, isFakeUrl]);
+
+  const handleMouseEnter = (e) => {
+    if (imageStatus === 'loaded') {
+      const rect = e.currentTarget.getBoundingClientRect();
+      setPreviewPosition({
+        x: rect.left,
+        y: rect.bottom + 8
+      });
+      setShowPreview(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setShowPreview(false);
+  };
+
+  // If image failed to load or is fake, show alt text as styled text
+  if (imageStatus === 'error') {
+    return (
+      <span className="image-alt-text" title={`Image: ${alt || 'No description'}`}>
+        {alt || 'Image'}
+      </span>
+    );
+  }
+
+  // If image is still loading, show placeholder
+  if (imageStatus === 'loading') {
+    return (
+      <span className="image-loading">
+        {alt || 'Loading image...'}
+      </span>
+    );
+  }
+
+  // Image loaded successfully - show inline with hover preview
+  return (
+    <span 
+      ref={containerRef}
+      className="image-hover-container"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <span className="image-link-text">
+        📷 {alt || 'Image'}
+      </span>
+      {showPreview && (
+        <div 
+          className="image-preview-tooltip"
+          style={{
+            position: 'fixed',
+            left: `${previewPosition.x}px`,
+            top: `${previewPosition.y}px`,
+          }}
+        >
+          <img src={src} alt={alt} {...props} />
+        </div>
+      )}
+    </span>
+  );
+}
 
 // Mermaid diagram component with lazy loading
 function MermaidDiagram({ code }) {
@@ -128,6 +223,8 @@ export default function MarkdownRenderer({ children, className = '' }) {
         rehypePlugins={[rehypeRaw]}
         components={{
           code: CodeBlock,
+          // Smart image handling with hover preview
+          img: SmartImage,
           // Enhance table styling
           table: ({ node, ...props }) => (
             <div className="table-wrapper">

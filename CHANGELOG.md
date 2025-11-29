@@ -4,6 +4,24 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.29.2
+**Branch:** `v0.29.2`  
+**Completed:** 2025-11-29 15:25 UTC | 2025-11-29 07:25 PST
+
+**Fixes:**
+- **Smart Image Handling**: Broken/placeholder images now display gracefully with hover preview
+  - Fake/placeholder URLs (via.placeholder.com, example.com, etc.) show alt text instead of broken icon
+  - Valid images display as clickable text with camera emoji (📷 Alt Text)
+  - Hovering over valid image text shows floating image preview tooltip
+  - Fixes existing conversations that had broken image markdown
+  - Preview tooltip animates in with max 400x300px size
+
+**Changes:**
+- `frontend/src/components/MarkdownRenderer.jsx` - Added SmartImage component with error detection and hover preview
+- `frontend/src/components/MarkdownRenderer.css` - Added styles for image-alt-text, image-hover-container, image-preview-tooltip
+
+---
+
 ### v0.29.1
 **Branch:** `v0.29.1`  
 **Completed:** 2025-11-29 15:15 UTC | 2025-11-29 07:15 PST

@@ -175,6 +175,70 @@
   margin: 12px 0;
 }
 
+/* Smart image - alt text for broken/fake images */
+.image-alt-text {
+  color: #888;
+  font-style: italic;
+  cursor: default;
+}
+
+/* Image loading state */
+.image-loading {
+  color: #666;
+  font-style: italic;
+}
+
+/* Hover container for valid images */
+.image-hover-container {
+  display: inline;
+  position: relative;
+}
+
+.image-link-text {
+  color: #60a5fa;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.image-link-text:hover {
+  color: #93c5fd;
+  text-decoration: underline;
+}
+
+/* Floating image preview tooltip */
+.image-preview-tooltip {
+  z-index: 1000;
+  background: #1a1a1a;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  max-width: 400px;
+  max-height: 300px;
+  overflow: hidden;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.image-preview-tooltip img {
+  max-width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  border-radius: 4px;
+  margin: 0;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Header styles */
 .markdown-renderer h1,
 .markdown-renderer h2,
