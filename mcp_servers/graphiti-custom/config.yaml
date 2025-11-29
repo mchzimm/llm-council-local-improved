@@ -8,7 +8,7 @@ server:
   port: 8000
 llm:
   provider: lmstudio
-  model: qwen2.5-14b-instruct
+  model: nexveridian/granite-4.0-h-tiny
   temperature: 0.0
   max_tokens: 16384
   providers:
@@ -16,7 +16,7 @@ llm:
       api_key: lms
       api_url: http://192.168.1.111:11434/v1
 embedder:
-  provider: openai_generic
+  provider: lmstudio
   model: text-embedding-nomic-embed-text-v1.5@f16
 database:
   provider: falkordb

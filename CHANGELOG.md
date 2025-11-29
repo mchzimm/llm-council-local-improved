@@ -4,6 +4,22 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.20.2
+**Branch:** `v0.20.2`  
+**Completed:** 2025-11-29 01:25 UTC | 2025-11-28 17:25 PST
+
+**Documentation:**
+- **Graphiti Edge Extraction Warning**: Documented upstream graphiti_core warning
+  - "Invalid entity IDs in edge extraction" is gracefully handled (edge skipped)
+  - Caused by LLM inconsistency in entity vs edge extraction
+  - No fix needed - this is expected behavior with local LLMs
+  - Updated `mcp_servers/graphiti-custom/README.md` with Known Warnings section
+
+**Changes:**
+- `mcp_servers/graphiti-custom/README.md` - Added Known Warnings documentation
+
+---
+
 ### v0.20.1
 **Branch:** `v0.20.1`  
 **Completed:** 2025-11-29 01:05 UTC | 2025-11-28 17:05 PST

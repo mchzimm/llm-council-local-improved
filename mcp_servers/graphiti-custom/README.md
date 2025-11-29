@@ -140,10 +140,29 @@ After running, test with:
 
 ```bash
 cd /Users/max/llm-council
-uv run python -m tests.test_graphiti
+./run_graphiti_test.sh  # Full test with container restart
+# OR
+uv run python -m tests.test_graphiti  # If container already running
 ```
 
-## Troubleshooting
+## Known Warnings
+
+### Invalid entity IDs in edge extraction
+
+```
+WARNING - Invalid entity IDs in edge extraction for LIKES. source_entity_id: 0, target_entity_id: 1, but only 1 entities available
+```
+
+**Cause:** This is an **upstream graphiti_core library behavior**. When the LLM extracts relationships (edges) from text, it may reference entity IDs that weren't extracted as separate entities.
+
+**Example:** For "Jane likes Nike shoes":
+1. Entity extraction finds only "Jane" (entity 0)
+2. Edge extraction outputs "Jane (0) LIKES Nike shoes (1)"
+3. Entity 1 doesn't exist → warning logged, edge skipped
+
+**Impact:** None - this is gracefully handled. The edge is skipped and processing continues.
+
+**Mitigation:** Use a larger/more capable LLM model for more consistent entity extraction.
 
 ### LLM returned invalid duplicate_facts idx values
 
