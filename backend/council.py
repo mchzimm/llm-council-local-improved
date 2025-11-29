@@ -610,8 +610,8 @@ IMPORTANT RULES:
 - "news", "current events", "what's happening", "this week" → needs_external_data: TRUE, data_types_needed: ["news"]
 - "time", "date", "what day" → needs_external_data: TRUE, data_types_needed: ["current_time"]
 - "weather", "temperature", "forecast" → needs_external_data: TRUE, data_types_needed: ["weather", "news"]
-- math questions → needs_external_data: TRUE, data_types_needed: ["calculation"]
-- general knowledge (capitals, definitions) → needs_external_data: FALSE, data_types_needed: ["none"]
+- **ANY math or calculation** (even simple ones like 2+2) → needs_external_data: TRUE, data_types_needed: ["calculation"]
+- general knowledge (capitals, definitions, history) → needs_external_data: FALSE, data_types_needed: ["none"]
 - greetings, chat → needs_external_data: FALSE, data_types_needed: ["none"]
 
 Examples:
@@ -620,6 +620,8 @@ Examples:
 - "What's in the news?" → needs_external_data: true, data_types_needed: ["news"]
 - "What major events happened this week?" → needs_external_data: true, data_types_needed: ["news"]
 - "What is 15*7?" → needs_external_data: true, data_types_needed: ["calculation"]
+- "What is 5 plus 3?" → needs_external_data: true, data_types_needed: ["calculation"]
+- "Calculate 2+2" → needs_external_data: true, data_types_needed: ["calculation"]
 - "What's the capital of France?" → needs_external_data: false, data_types_needed: ["none"]
 - "Hello!" → needs_external_data: false, data_types_needed: ["none"]
 
@@ -637,6 +639,22 @@ JSON response:"""
         result = _extract_json_from_response(content)
         
         if result and 'expectations' in result:
+            # Post-process: Fix common LLM mistakes for calculation queries
+            # LLMs sometimes say "needs_external_data: false" for simple math
+            query_lower = user_query.lower()
+            math_indicators = ['plus', 'minus', 'times', 'divided', 'multiply', 'add', 'subtract',
+                              'calculate', 'compute', '+', '-', '*', '/', '×', '÷', 'sum', 'difference',
+                              'product', 'quotient', 'what is', 'how much is']
+            has_numbers = any(c.isdigit() for c in user_query)
+            has_math = any(indicator in query_lower for indicator in math_indicators)
+            
+            if has_numbers and has_math:
+                # Override LLM if it incorrectly said no external data needed for math
+                if not result.get('needs_external_data', False) or 'calculation' not in result.get('data_types_needed', []):
+                    print(f"[Expectations] Override: Math query detected, forcing calculation tool")
+                    result['needs_external_data'] = True
+                    result['data_types_needed'] = ['calculation']
+            
             print(f"[Expectations] {result.get('expectations', [])}, needs_external: {result.get('needs_external_data')}, data_types: {result.get('data_types_needed', [])}")
             return result
         return None
@@ -669,13 +687,15 @@ async def _evaluate_tool_confidence(
         }
     
     # Direct mapping from data types to tools
+    # For calculator, we use 'calculator.add' as a placeholder - Phase 2 will determine
+    # the correct operation (add, subtract, multiply, divide) based on the query
     DATA_TYPE_TO_TOOL = {
         'current_time': ('system-date-time.get-system-date-time', 'system-date-time', 0.95),
         'location': ('system-geo-location.get-system-geo-location', 'system-geo-location', 0.95),
         'news': ('websearch.search', 'websearch', 0.9),
         'weather': ('websearch.search', 'websearch', 0.9),
         'current_events': ('websearch.search', 'websearch', 0.9),
-        'calculation': ('calculator.multiply', 'calculator', 0.85),  # Will be refined in phase 2
+        'calculation': ('calculator', 'calculator', 0.85),  # Server name only - Phase 2 picks operation
         'web_content': ('retrieve-web-page.get-page-from-url', 'retrieve-web-page', 0.8),
     }
     
@@ -837,6 +857,54 @@ async def _phase1_analyze_query(user_query: str, detailed_tool_info: str) -> Opt
         }
 
 
+def _parse_calculator_query(query: str) -> Optional[Dict[str, Any]]:
+    """
+    Parse a calculator query and extract the operation and numbers deterministically.
+    
+    This is more reliable than using an LLM for simple number extraction.
+    
+    Returns:
+        Dict with 'tool' and 'arguments' or None if parsing fails
+    """
+    import re
+    
+    query_lower = query.lower()
+    
+    # Find all numbers in the query (including decimals)
+    numbers = re.findall(r'-?\d+\.?\d*', query)
+    if len(numbers) < 2:
+        return None
+    
+    # Convert to float/int
+    nums = []
+    for n in numbers[:2]:  # Take first two numbers
+        if '.' in n:
+            nums.append(float(n))
+        else:
+            nums.append(int(n))
+    
+    a, b = nums[0], nums[1]
+    
+    # Determine operation
+    operation = None
+    if any(op in query_lower for op in ['plus', 'add', '+', 'sum']):
+        operation = 'add'
+    elif any(op in query_lower for op in ['minus', 'subtract', '-', 'difference']):
+        operation = 'subtract'
+    elif any(op in query_lower for op in ['times', 'multiply', '*', '×', 'product']):
+        operation = 'multiply'
+    elif any(op in query_lower for op in ['divided', 'divide', '/', '÷', 'quotient']):
+        operation = 'divide'
+    
+    if operation:
+        return {
+            "tool": f"calculator.{operation}",
+            "arguments": {"a": a, "b": b}
+        }
+    
+    return None
+
+
 async def _phase2_generate_tool_call(
     user_query: str,
     tool_name: str,
@@ -849,6 +917,14 @@ async def _phase2_generate_tool_call(
     Returns:
         Dict with 'tool', 'arguments' or None on failure
     """
+    # Fast path: Handle calculator operations deterministically
+    # This avoids LLM unreliability in parsing simple numbers
+    if server_name == 'calculator' or tool_name == 'calculator':
+        calc_result = _parse_calculator_query(user_query)
+        if calc_result:
+            print(f"[MCP Phase 2] Calculator fast path: {calc_result}")
+            return calc_result
+    
     # Include current date context for time-sensitive queries
     current_time = datetime.now()
     # Calculate week start (Monday) and end (Sunday)
@@ -868,17 +944,28 @@ async def _phase2_generate_tool_call(
 
 USER QUERY: {user_query}
 
-SELECTED TOOL: {tool_name}
+SELECTED SERVER/TOOL: {tool_name}
 
 TASK: Generate the exact tool call with the correct arguments based on the user's query.
 
-For the tool "{tool_name}", create a JSON object with:
-{{"tool": "{tool_name}", "arguments": {{...parameters with correct values...}}}}
+CRITICAL for calculator operations - READ THE QUERY CAREFULLY:
+- Extract the EXACT numbers from the query "{user_query}"
+- "plus", "add", "+" → use "calculator.add" with {{"a": first_number, "b": second_number}}
+- "minus", "subtract", "-" → use "calculator.subtract" with {{"a": first_number, "b": second_number}}
+- "times", "multiply", "*", "×" → use "calculator.multiply" with {{"a": first_number, "b": second_number}}
+- "divided by", "divide", "/", "÷" → use "calculator.divide" with {{"a": first_number, "b": second_number}}
+- Example: "What is 5 plus 3?" → {{"tool": "calculator.add", "arguments": {{"a": 5, "b": 3}}}}
+- Example: "Calculate 12 times 4" → {{"tool": "calculator.multiply", "arguments": {{"a": 12, "b": 4}}}}
+
+If "{tool_name}" is just a server name (e.g., "calculator"), pick the appropriate operation.
+If "{tool_name}" is a full tool name (e.g., "websearch.search"), use that exact tool.
+
+Create a JSON object with:
+{{"tool": "server.operation", "arguments": {{...parameters with correct values...}}}}
 
 Important:
 - Use the exact parameter names from the tool definition
-- Provide appropriate values based on the user's query
-- For math operations, extract the numbers from the query
+- For math: use the EXACT numbers from the user's query - do not change them
 - For web searches: 
   * Add "news" or "latest" to get actual articles instead of homepages
   * For time-sensitive queries, be SPECIFIC about the time frame:

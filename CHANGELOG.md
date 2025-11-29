@@ -4,6 +4,34 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.21.2
+**Branch:** `v0.21.2`  
+**Completed:** 2025-11-29 03:35 UTC | 2025-11-28 19:35 PST
+
+**Fixes:**
+- **Calculator Tool Routing**: Fixed "5 plus 3" not using calculator MCP tool
+  - Added deterministic `_parse_calculator_query()` function for reliable number extraction
+  - Maps data type "calculation" to just "calculator" server (not specific operation)
+  - Phase 2 now uses fast path for calculator with regex-based number parsing
+  - Supports: plus/add, minus/subtract, times/multiply, divided/divide operations
+  - Avoids LLM unreliability in parsing simple numbers
+
+- **Math Query Detection Override**: Added post-processing fix for expectation analysis
+  - LLM sometimes says simple math doesn't need tools (treating it as "general knowledge")
+  - Added deterministic override that forces `needs_external_data: true` for any query with numbers and math keywords
+  - Keywords: plus, minus, times, divided, multiply, add, subtract, calculate, compute, +, -, *, /, etc.
+
+**Technical Details:**
+- Tool execution works correctly (verified: a=5, b=3 → result=8)
+- Response generation sometimes hallucinates wrong numbers (LLM issue, not tool issue)
+- Test updated: `calculator_addition` with query "What is 5 plus 3?"
+
+**Changes:**
+- `backend/council.py` - Added `_parse_calculator_query()`, math detection override
+- `tests/scenarios.json` - Updated calculator_addition test, fixed factual_capital min_length
+
+---
+
 ### v0.21.1
 **Branch:** `v0.21.1`  
 **Completed:** 2025-11-29 03:10 UTC | 2025-11-28 19:10 PST

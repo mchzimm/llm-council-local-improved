@@ -36,14 +36,14 @@
     },
     {
       "name": "calculator_addition",
-      "query": "What is 47 + 83?",
+      "query": "What is 5 plus 3?",
       "expected_behavior": {
-        "contains": ["130"],
+        "tool_used": "calculator.add",
+        "contains": ["8"],
         "has_content": true
       },
-      "tags": ["mcp", "calculator", "optional"],
-      "timeout_seconds": 60.0,
-      "disabled": true
+      "tags": ["mcp", "calculator", "core"],
+      "timeout_seconds": 60.0
     },
     {
       "name": "calculator_multiply",
@@ -72,7 +72,8 @@
       "query": "What is the capital of France?",
       "expected_behavior": {
         "contains": ["paris"],
-        "has_content": true
+        "has_content": true,
+        "min_length": 20
       },
       "tags": ["factual", "no-tool", "core"],
       "timeout_seconds": 60.0
