@@ -4,6 +4,37 @@
   flex-direction: column;
   height: 100vh;
   background: #ffffff;
+  position: relative;
+}
+
+/* Pinned user message header */
+.pinned-user-message {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(240, 247, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #d0e7ff;
+  padding: 12px 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.pinned-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #4a90e2;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.pinned-content {
+  font-size: 13px;
+  color: #333;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .messages-container {
@@ -87,6 +118,23 @@
   line-height: 1.6;
   max-width: 80%;
   white-space: pre-wrap;
+  position: relative;
+}
+
+.user-message .message-content .message-actions {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #d0e7ff;
+  justify-content: flex-end;
+}
+
+.btn-icon {
+  font-size: 14px;
+}
+
+.btn-text {
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .loading-indicator {
@@ -200,7 +248,7 @@
 .message-actions {
   display: flex;
   gap: 8px;
-  opacity: 0;
+  opacity: 0.6;
   transition: opacity 0.2s;
 }
 
@@ -209,14 +257,17 @@
 }
 
 .action-btn {
-  background: none;
+  background: #f8f9fa;
   border: 1px solid #d0d0d0;
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 14px;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 16px;
   cursor: pointer;
-  color: #666;
+  color: #555;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .action-btn:hover:not(:disabled) {

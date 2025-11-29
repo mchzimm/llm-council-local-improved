@@ -4,6 +4,34 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.25.0
+**Branch:** `v0.25.0`  
+**Completed:** 2025-11-29 14:10 UTC | 2025-11-29 06:10 PST
+
+**Features:**
+- **Pinned User Message Header**: Original question stays visible when scrolling
+  - Semi-transparent header appears when first user message scrolls out of view
+  - Shows truncated preview (200 chars) with pin emoji
+  - Backdrop blur effect for readability
+
+- **Improved Edit/Re-run Buttons**: Better visibility and positioning
+  - Buttons moved inside message card (bottom-right)
+  - Added text labels ("Re-run", "Edit") alongside icons
+  - Increased size and always partially visible (60% opacity on hover)
+  - Styled with border separator from message content
+
+- **Default Formatter Prompt**: Added to prompt library
+  - Professional formatting with tables and emojis (conservative)
+  - Creates quick takeaways and recommendations by use case
+  - Adds follow-up questions at end
+
+**Changes:**
+- `frontend/src/components/ChatInterface.jsx` - Pinned header, button UI
+- `frontend/src/components/ChatInterface.css` - New styles
+- `data/prompt_library.json` - Add formatter_default prompt
+
+---
+
 ### v0.24.0
 **Branch:** `v0.24.0`  
 **Completed:** 2025-11-29 13:30 UTC | 2025-11-29 05:30 PST

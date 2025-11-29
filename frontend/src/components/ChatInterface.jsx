@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import Stage1 from './Stage1';
 import Stage2 from './Stage2';
@@ -14,7 +14,31 @@ export default function ChatInterface({
 }) {
   const [input, setInput] = useState('');
   const [editingIndex, setEditingIndex] = useState(null);
+  const [showPinnedHeader, setShowPinnedHeader] = useState(false);
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
+  const firstUserMessageRef = useRef(null);
+
+  // Find first and last user messages
+  const { firstUserMessage, lastUserMessage, firstUserIndex, lastUserIndex } = useMemo(() => {
+    if (!conversation?.messages?.length) return {};
+    
+    const userMessages = conversation.messages
+      .map((msg, idx) => ({ msg, idx }))
+      .filter(({ msg }) => msg.role === 'user');
+    
+    if (userMessages.length === 0) return {};
+    
+    const first = userMessages[0];
+    const last = userMessages[userMessages.length - 1];
+    
+    return {
+      firstUserMessage: first.msg,
+      lastUserMessage: last.msg,
+      firstUserIndex: first.idx,
+      lastUserIndex: last.idx,
+    };
+  }, [conversation?.messages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -23,6 +47,28 @@ export default function ChatInterface({
   useEffect(() => {
     scrollToBottom();
   }, [conversation]);
+
+  // Handle scroll to show/hide pinned header
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      if (!firstUserMessageRef.current) {
+        setShowPinnedHeader(false);
+        return;
+      }
+      
+      const firstMsgRect = firstUserMessageRef.current.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      
+      // Show pinned header when first user message scrolls above container top
+      setShowPinnedHeader(firstMsgRect.bottom < containerRect.top + 20);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [firstUserMessage]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -77,7 +123,19 @@ export default function ChatInterface({
 
   return (
     <div className="chat-interface">
-      <div className="messages-container">
+      {/* Pinned first user message header */}
+      {showPinnedHeader && firstUserMessage && (
+        <div className="pinned-user-message">
+          <div className="pinned-label">📌 Original Question</div>
+          <div className="pinned-content">
+            {firstUserMessage.content.length > 200 
+              ? firstUserMessage.content.substring(0, 200) + '...'
+              : firstUserMessage.content}
+          </div>
+        </div>
+      )}
+
+      <div className="messages-container" ref={messagesContainerRef}>
         {conversation.messages.length === 0 ? (
           <div className="empty-state">
             <h2>Start a conversation</h2>
@@ -85,11 +143,17 @@ export default function ChatInterface({
           </div>
         ) : (
           conversation.messages.map((msg, index) => (
-            <div key={index} className="message-group">
+            <div 
+              key={index} 
+              className="message-group"
+              ref={index === firstUserIndex ? firstUserMessageRef : null}
+            >
               {msg.role === 'user' ? (
                 <div className="user-message">
-                  <div className="message-header">
-                    <div className="message-label">You</div>
+                  <div className="message-content">
+                    <div className="markdown-content">
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    </div>
                     <div className="message-actions">
                       <button
                         className="action-btn redo-btn"
@@ -97,7 +161,8 @@ export default function ChatInterface({
                         disabled={isLoading}
                         title="Re-run council with this message"
                       >
-                        ↻
+                        <span className="btn-icon">↻</span>
+                        <span className="btn-text">Re-run</span>
                       </button>
                       <button
                         className="action-btn edit-btn"
@@ -105,13 +170,9 @@ export default function ChatInterface({
                         disabled={isLoading}
                         title="Edit and resubmit message"
                       >
-                        ✎
+                        <span className="btn-icon">✎</span>
+                        <span className="btn-text">Edit</span>
                       </button>
-                    </div>
-                  </div>
-                  <div className="message-content">
-                    <div className="markdown-content">
-                      <ReactMarkdown>{msg.content}</ReactMarkdown>
                     </div>
                   </div>
                 </div>

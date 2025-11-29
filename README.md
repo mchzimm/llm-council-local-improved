@@ -17,7 +17,20 @@ In a bit more detail, here is what happens when you submit a query:
 
 ## Key Features
 
-### Current Release (v0.24.0)
+### Current Release (v0.25.0)
+- **Pinned User Message Header**: Original question stays visible when scrolling
+  - Semi-transparent header with backdrop blur appears when scrolled
+  - Shows truncated preview of first user message
+
+- **Improved Edit/Re-run Buttons**: Better visibility and positioning
+  - Buttons inside message card with text labels
+  - Always partially visible, larger touch targets
+
+- **Default Formatter Prompt**: Professional formatting for responses
+  - Tables, emojis, quick takeaways, recommendations by use case
+  - Follow-up questions at end
+
+### Previous Release (v0.24.0)
 - **Firecrawl MCP Server**: Web scraping and content extraction using Firecrawl API
   - `firecrawl-scrape`: Scrape single URL to clean markdown
   - `firecrawl-batch-scrape`: Scrape multiple URLs (max 10)
