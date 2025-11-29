@@ -95,11 +95,12 @@
 }
 
 .tool-step {
+  position: relative;
   background: white;
   border: 1px solid #e0e0e0;
   border-radius: 6px;
   margin-bottom: 8px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .tool-step:last-child {
@@ -230,4 +231,92 @@
   background: #ffebee;
   border-color: #ff5252;
   color: #c62828;
+}
+
+/* Tool Step Stats Overlay - appears on hover */
+.tool-step-stats-overlay {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  font-size: 13px;
+}
+
+.tool-step-stats-overlay::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 20px;
+  width: 12px;
+  height: 12px;
+  background: #1a1a2e;
+  transform: rotate(45deg);
+}
+
+.step-stats-title {
+  font-weight: 600;
+  color: #bb86fc;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.step-stats-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.step-stats-row:last-of-type {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.step-stats-label {
+  color: #888;
+}
+
+.step-stats-value {
+  color: #fff;
+  font-family: monospace;
+}
+
+.step-stats-value.success {
+  color: #4caf50;
+}
+
+.step-stats-value.error {
+  color: #f44336;
+}
+
+.step-stats-output {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.step-stats-output-label {
+  color: #888;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+
+.step-stats-output-value {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 8px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+  max-height: 150px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
 }

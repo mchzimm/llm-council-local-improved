@@ -4,6 +4,29 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.29.4
+**Branch:** `v0.29.4`  
+**Completed:** 2025-11-29 16:45 UTC | 2025-11-29 08:45 PST
+
+**Fixes:**
+- **Message IDs Positioning**: Changed message IDs from absolute to inline positioning
+  - IDs now appear as inline elements above message content
+  - Previously positioned absolutely which could overlap with other elements
+  - Fixes visual overlap issues with sidebar header
+  
+- **Tool Steps Hover Stats**: Added stats overlay to multi-step tool calls
+  - Hover over any tool step to see detailed stats (server, tool, execution time, status)
+  - Shows output preview in dark theme overlay
+  - Matches styling of single tool result card overlay
+  - Previously only single tool results had hover overlays
+
+**Changes:**
+- `frontend/src/components/ChatInterface.css` - Changed `.message-ids` to inline positioning
+- `frontend/src/components/ToolSteps.jsx` - Added hover state and stats overlay
+- `frontend/src/components/ToolSteps.css` - Added stats overlay styles
+
+---
+
 ### v0.29.3
 **Branch:** `v0.29.3`  
 **Completed:** 2025-11-29 15:26 UTC | 2025-11-29 07:26 PST

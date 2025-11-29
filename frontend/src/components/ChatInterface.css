@@ -97,17 +97,14 @@
   position: relative;
 }
 
-/* Message IDs - top-left corner */
+/* Message IDs - inline above message content */
 .message-ids {
-  position: absolute;
-  top: 0;
-  left: 0;
   display: flex;
   align-items: center;
   gap: 4px;
   font-family: 'Monaco', 'Menlo', monospace;
   font-size: 10px;
-  z-index: 5;
+  margin-bottom: 6px;
 }
 
 .id-badge {

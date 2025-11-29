@@ -8,6 +8,7 @@ import './ToolSteps.css';
  * - Summary header showing tool count and total execution time
  * - Expandable detail view for each tool call
  * - Input/output display for each step
+ * - Hover overlay with detailed stats for each step
  * 
  * Props:
  * - toolSteps: Array of tool step objects with: tool, input, output, executionTime, status, startTime
@@ -16,6 +17,7 @@ import './ToolSteps.css';
 export default function ToolSteps({ toolSteps = [], currentStep = null }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [expandedSteps, setExpandedSteps] = useState({});
+  const [hoveredStep, setHoveredStep] = useState(null);
 
   // Combine completed steps with current step
   const allSteps = currentStep 
@@ -102,6 +104,8 @@ export default function ToolSteps({ toolSteps = [], currentStep = null }) {
             <div 
               key={`${step.tool}-${index}`}
               className={`tool-step ${step.status || 'complete'}`}
+              onMouseEnter={() => setHoveredStep(index)}
+              onMouseLeave={() => setHoveredStep(null)}
             >
               <div 
                 className="tool-step-header"
@@ -151,6 +155,35 @@ export default function ToolSteps({ toolSteps = [], currentStep = null }) {
                       <code className="step-io-value">{step.error}</code>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* Hover stats overlay */}
+              {hoveredStep === index && (
+                <div className="tool-step-stats-overlay">
+                  <div className="step-stats-title">📊 Tool Call Details</div>
+                  <div className="step-stats-row">
+                    <span className="step-stats-label">Server</span>
+                    <span className="step-stats-value">{step.tool.split('.')[0] || 'unknown'}</span>
+                  </div>
+                  <div className="step-stats-row">
+                    <span className="step-stats-label">Tool</span>
+                    <span className="step-stats-value">{step.tool.split('.').slice(1).join('.') || step.tool}</span>
+                  </div>
+                  <div className="step-stats-row">
+                    <span className="step-stats-label">Execution Time</span>
+                    <span className="step-stats-value">{step.executionTime !== undefined ? `${step.executionTime.toFixed(2)}s` : 'N/A'}</span>
+                  </div>
+                  <div className="step-stats-row">
+                    <span className="step-stats-label">Status</span>
+                    <span className={`step-stats-value ${step.status === 'error' ? 'error' : 'success'}`}>
+                      {step.status === 'error' ? '✗ Failed' : step.status === 'running' ? '⏳ Running' : '✓ Success'}
+                    </span>
+                  </div>
+                  <div className="step-stats-output">
+                    <div className="step-stats-output-label">Output Preview:</div>
+                    <div className="step-stats-output-value">{formatOutput(step.output)}</div>
+                  </div>
                 </div>
               )}
             </div>
