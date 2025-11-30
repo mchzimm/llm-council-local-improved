@@ -4,6 +4,20 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.30.8
+**Branch:** `v0.30.8`  
+**Completed:** 2025-11-30 04:43 UTC | 2025-11-29 20:43 PST
+
+**Bug Fixes:**
+- **Token stream error fix**: Fixed AttributeError in MCPRegistry
+  - Error: `'MCPRegistry' object has no attribute 'format_tools_for_prompt'`
+  - Changed call from `format_tools_for_prompt()` to `get_tool_descriptions()`
+
+**Changes:**
+- `backend/main.py` - Fixed method name on line 714
+
+---
+
 ### v0.30.6
 **Branch:** `v0.30.6`  
 **Completed:** 2025-11-30 04:20 UTC | 2025-11-29 20:20 PST
