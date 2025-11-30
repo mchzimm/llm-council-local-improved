@@ -97,6 +97,32 @@
   position: relative;
 }
 
+/* Name overlay positioned to the left of messages */
+.message-name-overlay {
+  position: absolute;
+  left: -80px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.message-name-overlay.user-name {
+  background: rgba(64, 128, 200, 0.15);
+  color: #3a7cc9;
+  border: 1px solid rgba(64, 128, 200, 0.3);
+}
+
+.message-name-overlay.ai-name {
+  background: rgba(52, 168, 83, 0.15);
+  color: #2e7d50;
+  border: 1px solid rgba(52, 168, 83, 0.3);
+}
+
 /* Message IDs - inline above message content */
 .message-ids {
   display: flex;

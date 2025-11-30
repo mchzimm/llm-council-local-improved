@@ -13,6 +13,7 @@ export default function ChatInterface({
   onRedoMessage,
   onEditMessage,
   isLoading,
+  memoryNames = { user_name: null, ai_name: null, loaded: false },
 }) {
   const [input, setInput] = useState('');
   const [editingIndex, setEditingIndex] = useState(null);
@@ -214,6 +215,10 @@ export default function ChatInterface({
             >
               {msg.role === 'user' ? (
                 <div className="user-message">
+                  {/* Name overlay */}
+                  <div className="message-name-overlay user-name">
+                    {memoryNames.user_name || 'User'}
+                  </div>
                   <div className="message-content">
                     <div className="message-ids">
                       <span className="id-badge conversation-id" title="Conversation ID">{conversation.id?.slice(0, 8)}</span>
@@ -247,6 +252,10 @@ export default function ChatInterface({
                 </div>
               ) : (
                 <div className="assistant-message">
+                  {/* Name overlay */}
+                  <div className="message-name-overlay ai-name">
+                    {memoryNames.ai_name || 'Assistant'}
+                  </div>
                   <div className="message-ids">
                     <span className="id-badge conversation-id" title="Conversation ID">{conversation.id?.slice(0, 8)}</span>
                     <span className="id-separator">|</span>

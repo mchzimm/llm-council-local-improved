@@ -195,4 +195,15 @@ export const api = {
     }
     return response.json();
   },
+
+  /**
+   * Get user and AI names from memory.
+   */
+  async getMemoryNames() {
+    const response = await fetch(`${API_BASE}/api/memory/names`);
+    if (!response.ok) {
+      throw new Error('Failed to get memory names');
+    }
+    return response.json();
+  },
 };

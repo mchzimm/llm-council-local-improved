@@ -205,6 +205,21 @@ async def get_memory_status():
     }
 
 
+@app.get("/api/memory/names")
+async def get_memory_names():
+    """Get user and AI names from memory."""
+    memory_service = get_memory_service()
+    
+    # Wait for names to be loaded (with timeout)
+    await memory_service.wait_for_names(timeout=5.0)
+    
+    return {
+        "user_name": memory_service.user_name,
+        "ai_name": memory_service.ai_name,
+        "loaded": memory_service.names_loaded
+    }
+
+
 @app.get("/api/metrics")
 async def get_metrics():
     """Get all model quality metrics."""

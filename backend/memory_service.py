@@ -64,6 +64,11 @@ class MemoryService:
         self._group_id: str = "llm_council"
         self._categorization_enabled: bool = True
         self._categorization_model: Optional[str] = None
+        # Name retrieval state
+        self._names_loaded = False
+        self._names_loading = asyncio.Event()
+        self._user_name: Optional[str] = None
+        self._ai_name: Optional[str] = None
     
     async def initialize(self) -> bool:
         """Initialize the memory service, checking Graphiti availability."""
@@ -110,6 +115,150 @@ class MemoryService:
     def is_available(self) -> bool:
         """Check if memory service is available."""
         return self._available
+    
+    @property
+    def user_name(self) -> Optional[str]:
+        """Get the user's name if loaded from memory."""
+        return self._user_name
+    
+    @property
+    def ai_name(self) -> Optional[str]:
+        """Get the AI's name if loaded from memory."""
+        return self._ai_name
+    
+    @property
+    def names_loaded(self) -> bool:
+        """Check if names have been loaded."""
+        return self._names_loaded
+    
+    async def wait_for_names(self, timeout: float = 10.0) -> bool:
+        """Wait for names to be loaded. Returns True if loaded, False on timeout."""
+        try:
+            await asyncio.wait_for(self._names_loading.wait(), timeout=timeout)
+            return True
+        except asyncio.TimeoutError:
+            return False
+    
+    async def load_names_from_memory(self) -> Dict[str, Optional[str]]:
+        """
+        Load user and AI names from memory at app startup.
+        This runs as a background task and must complete before other memory calls.
+        
+        Returns:
+            Dict with 'user_name' and 'ai_name' keys
+        """
+        if self._names_loaded:
+            return {"user_name": self._user_name, "ai_name": self._ai_name}
+        
+        if not self._available:
+            self._names_loaded = True
+            self._names_loading.set()
+            return {"user_name": None, "ai_name": None}
+        
+        try:
+            registry = get_mcp_registry()
+            
+            # Search all relevant groups for names
+            search_groups = [
+                f"{MEMORY_GROUP_PREFIX}_autobiographical",
+                f"{MEMORY_GROUP_PREFIX}_semantic",
+                f"{MEMORY_GROUP_PREFIX}_episodic"
+            ]
+            
+            # Search for AI name (Aether)
+            ai_result = await registry.call_tool("graphiti.search_nodes", {
+                "query": "Aether AI name assistant known as",
+                "group_ids": search_groups,
+                "max_nodes": 20
+            })
+            
+            nodes = ai_result.get("output", {}).get("structuredContent", {}).get("result", {})
+            if isinstance(nodes, dict):
+                nodes = nodes.get("nodes", [])
+            
+            for node in nodes:
+                name = node.get("name", "") if isinstance(node, dict) else ""
+                summary = node.get("summary", "") if isinstance(node, dict) else ""
+                
+                # Check if this is an Aether reference
+                if name.lower() == "aether" or "aether" in summary.lower():
+                    self._ai_name = "Aether"
+                    print(f"[Memory] Found AI name: Aether")
+                    break
+            
+            # Search for user name (prioritize Mark)
+            user_result = await registry.call_tool("graphiti.search_nodes", {
+                "query": "user name Mark human",
+                "group_ids": search_groups,
+                "max_nodes": 20
+            })
+            
+            nodes = user_result.get("output", {}).get("structuredContent", {}).get("result", {})
+            if isinstance(nodes, dict):
+                nodes = nodes.get("nodes", [])
+            
+            for node in nodes:
+                name = node.get("name", "") if isinstance(node, dict) else ""
+                summary = node.get("summary", "") if isinstance(node, dict) else ""
+                content = f"{name} {summary}".lower()
+                
+                # Prioritize Mark if found
+                if "mark" in content and ("user" in content or "human" in content):
+                    self._user_name = "Mark"
+                    print(f"[Memory] Found user name: Mark")
+                    break
+                    
+                # Fallback to other user name patterns
+                if "user" in content and "name" in content:
+                    extracted = self._extract_name_from_fact(summary, is_user=True)
+                    if extracted and extracted.lower() != "hermes":  # Skip AI confusion
+                        self._user_name = extracted
+                        print(f"[Memory] Found user name: {extracted}")
+                        break
+            
+        except Exception as e:
+            print(f"[Memory] Error loading names: {e}")
+        
+        self._names_loaded = True
+        self._names_loading.set()
+        
+        return {"user_name": self._user_name, "ai_name": self._ai_name}
+    
+    def _extract_name_from_fact(self, fact: str, is_user: bool) -> Optional[str]:
+        """Extract a name from a fact string."""
+        import re
+        
+        # Common patterns for names
+        if is_user:
+            # Look for "user's name is X" or "user is called X" or "my name is X"
+            patterns = [
+                r"user(?:'s)?\s+name\s+is\s+(\w+)",
+                r"name\s+is\s+(\w+)",
+                r"called\s+(\w+)",
+                r"known\s+as\s+(\w+)",
+                r"I\s+am\s+(\w+)"
+            ]
+        else:
+            # Look for AI/assistant name patterns
+            patterns = [
+                r"(?:your|AI|assistant)\s+name\s+is\s+(\w+)",
+                r"known\s+as\s+(\w+)",
+                r"shall\s+be\s+(?:called\s+)?(\w+)",
+                r"recognized\s+as\s+(\w+)"
+            ]
+            
+            # Special case for Aether
+            if "aether" in fact.lower():
+                return "Aether"
+        
+        for pattern in patterns:
+            match = re.search(pattern, fact, re.IGNORECASE)
+            if match:
+                name = match.group(1)
+                # Capitalize first letter
+                return name.capitalize()
+        
+        return None
     
     async def classify_memory_types(self, content: str) -> Set[str]:
         """
@@ -684,6 +833,12 @@ def get_memory_service() -> MemoryService:
 
 
 async def initialize_memory() -> bool:
-    """Initialize the global memory service."""
+    """Initialize the global memory service and start loading names."""
     service = get_memory_service()
-    return await service.initialize()
+    result = await service.initialize()
+    
+    # Start loading names in background
+    if result:
+        asyncio.create_task(service.load_names_from_memory())
+    
+    return result

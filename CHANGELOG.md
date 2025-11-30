@@ -4,6 +4,32 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.36.0
+**Branch:** `v0.36.0`  
+**Completed:** 2025-11-30 14:35 UTC | 2025-11-30 06:35 PST
+
+**Features:**
+- **Name retrieval from memory**: Load user and AI names at app startup
+  - Searches autobiographical, semantic, and episodic memory groups
+  - User name: "Mark", AI name: "Aether" retrieved from Graphiti
+  - Names available via `/api/memory/names` endpoint
+  - Background loading with dependency waiting for other memory calls
+
+- **Name display in chat UI**: Show names next to messages
+  - User messages display user name (e.g., "Mark") on left overlay
+  - Assistant messages display AI name (e.g., "Aether") on left overlay
+  - Names positioned vertically centered on message frame
+
+**Changes:**
+- `backend/memory_service.py` - Added `load_names_from_memory()`, name properties, wait mechanism
+- `backend/main.py` - Added `/api/memory/names` endpoint
+- `frontend/src/api.js` - Added `getMemoryNames()` API call
+- `frontend/src/App.jsx` - Added memoryNames state, fetch on init, pass to ChatInterface
+- `frontend/src/components/ChatInterface.jsx` - Added name overlay to messages
+- `frontend/src/components/ChatInterface.css` - Added `.message-name-overlay` styling
+
+---
+
 ### v0.35.1
 **Branch:** `v0.35.1`  
 **Completed:** 2025-11-30 13:45 UTC | 2025-11-30 05:45 PST

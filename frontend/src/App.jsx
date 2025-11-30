@@ -12,6 +12,7 @@ function App() {
   const [isInitializing, setIsInitializing] = useState(true);
   const [initError, setInitError] = useState(null);
   const [titleGenerationStatus, setTitleGenerationStatus] = useState({}); // conversation_id -> status
+  const [memoryNames, setMemoryNames] = useState({ user_name: null, ai_name: null, loaded: false });
 
   // Load conversations on mount and restore last viewed conversation
   useEffect(() => {
@@ -22,6 +23,14 @@ function App() {
         console.log('[App] Loading conversations...');
         const convs = await loadConversations(true);  // throwOnError=true during init
         console.log('[App] Loaded', convs?.length || 0, 'conversations');
+        
+        // Load names from memory (background, non-blocking)
+        api.getMemoryNames().then(names => {
+          console.log('[App] Loaded memory names:', names);
+          setMemoryNames(names);
+        }).catch(err => {
+          console.warn('[App] Failed to load memory names:', err);
+        });
         
         // Restore last viewed conversation from localStorage
         const lastConversationId = localStorage.getItem('lastConversationId');
@@ -1497,6 +1506,7 @@ function App() {
         onRedoMessage={handleRedoMessage}
         onEditMessage={handleEditMessage}
         isLoading={isLoading}
+        memoryNames={memoryNames}
       />
     </div>
   );
