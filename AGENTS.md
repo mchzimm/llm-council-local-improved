@@ -42,6 +42,13 @@ The project's `tmp/` folder is at `<project_root>/tmp/` and is used for:
 
 This ensures all temporary data stays within the project and is properly tracked/cleaned up.
 
+### Intake File Management
+When completing items from `tmp/intake.md`:
+1. **Move completed items** to `tmp/intake-backup.md`
+2. **Preserve instruction lines** - Do NOT move/change/remove lines starting with `**`
+3. **Insert at top** - Place completed items underneath the first `**` line and above existing items
+4. Format: Keep the original item text exactly as-is
+
 ## Change Request Handling
 
 **CRITICAL: Follow this process when receiving ANY change request from user.**

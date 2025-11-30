@@ -19,7 +19,7 @@ export default function Sidebar({
   
   // Conversation Filter System (CFS) state
   const [showCfsOverlay, setShowCfsOverlay] = useState(false);
-  const [activeFilterGroup, setActiveFilterGroup] = useState('all'); // 'all', 'user', 'test'
+  const [activeFilterGroup, setActiveFilterGroup] = useState('user'); // 'all', 'user', 'test' - default to 'user'
   const cfsOverlayRef = useRef(null);
   const [isDeletingDuplicates, setIsDeletingDuplicates] = useState(false);
   
@@ -210,31 +210,12 @@ export default function Sidebar({
     });
   }
 
-  // Extract tags from conversation (looks for <!-- tags: #tag1 #tag2 | ... --> pattern)
-  const getConversationTags = (conv) => {
-    const tags = new Set();
-    if (conv.messages) {
-      for (const msg of conv.messages) {
-        if (msg.content) {
-          const match = msg.content.match(/<!--\s*tags:\s*([^|]+)/i);
-          if (match) {
-            const tagStr = match[1];
-            const foundTags = tagStr.match(/#\w+/g);
-            if (foundTags) {
-              foundTags.forEach(t => tags.add(t.toLowerCase()));
-            }
-          }
-        }
-      }
-    }
-    return tags;
-  };
-
-  // Check if conversation matches current filter
+  // Check if conversation matches current filter using tags from metadata
   const conversationMatchesFilter = (conv) => {
     if (activeFilterGroup === 'all') return true;
     
-    const tags = getConversationTags(conv);
+    // Get tags from metadata (populated by backend)
+    const tags = new Set((conv.tags || []).map(t => t.toLowerCase()));
     
     if (activeFilterGroup === 'user') {
       // User group: exclude conversations with #auto or #test tags

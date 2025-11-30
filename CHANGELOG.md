@@ -4,6 +4,31 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.32.4
+**Branch:** `v0.32.4`  
+**Completed:** 2025-11-30 08:10 UTC | 2025-11-30 00:10 PST
+
+**Bug Fixes:**
+- **CFS test filter not showing test conversations**: Fixed by extracting tags in backend
+  - Backend now parses `<!-- tags: ... -->` from first user message
+  - Tags included in conversation list API response
+  - Frontend uses tags from metadata instead of parsing messages (which aren't loaded)
+- **Default CFS filter**: Changed default filter from 'all' to 'user'
+  - User conversations shown by default on app start
+  - Test conversations filtered out unless 'Test' tab selected
+
+**Documentation:**
+- **AGENTS.md**: Added intake file management instructions
+  - Move completed items from intake.md to intake-backup.md
+  - Preserve instruction lines starting with `**`
+
+**Changes:**
+- `backend/storage.py` - Extract tags from first user message in `list_conversations()`
+- `frontend/src/components/Sidebar.jsx` - Use tags from metadata, default to 'user' filter
+- `AGENTS.md` - Added intake backup workflow
+
+---
+
 ### v0.32.3
 **Branch:** `v0.32.3`  
 **Completed:** 2025-11-30 07:34 UTC | 2025-11-29 23:34 PST

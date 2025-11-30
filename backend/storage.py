@@ -140,13 +140,26 @@ def list_conversations() -> List[Dict[str, Any]]:
                     # Convert timestamp to ISO format string
                     created_at = datetime.fromtimestamp(created_at).isoformat()
                 
+                # Extract tags from first user message (for CFS filtering)
+                tags = []
+                for msg in data.get("messages", []):
+                    if msg.get("role") == "user" and msg.get("content"):
+                        import re
+                        match = re.search(r'<!--\s*tags:\s*([^|]+)', msg["content"], re.IGNORECASE)
+                        if match:
+                            tag_str = match.group(1)
+                            found_tags = re.findall(r'#\w+', tag_str)
+                            tags = [t.lower() for t in found_tags]
+                        break  # Only check first user message
+                
                 conversations.append({
                     "id": data["id"],
                     "created_at": created_at,
                     "title": data.get("title", "New Conversation"),
                     "message_count": len(data["messages"]),
                     "deleted": data.get("deleted", False),
-                    "deleted_at": data.get("deleted_at")
+                    "deleted_at": data.get("deleted_at"),
+                    "tags": tags
                 })
 
     # Sort by creation time, newest first - handle mixed string/float timestamps
