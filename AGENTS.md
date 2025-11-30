@@ -304,10 +304,11 @@ FIX version (0.x.Y) - increment last number only:
 □ 3. TESTS PASS (uv run -m tests.test_runner)
 □ 4. README.md UPDATED (Current Release section)
 □ 5. CHANGELOG.md UPDATED (version entry with timestamps)
-□ 6. COMMITTED (git add -A && git commit -m "v<x.y.z>: description")
-□ 7. PUSHED to feature branch (git push -u origin v<x.y.z>)
-□ 8. MERGED to master (git checkout master && git merge v<x.y.z>)
-□ 9. PUSHED master (git push origin master)
+□ 6. TODO.md UPDATED (remove completed, move next to Current)
+□ 7. COMMITTED (git add -A && git commit -m "v<x.y.z>: description")
+□ 8. PUSHED to feature branch (git push -u origin v<x.y.z>)
+□ 9. MERGED to master (git checkout master && git merge v<x.y.z>)
+□ 10. PUSHED master (git push origin master)
 ```
 
 **README.md Update Requirements:**
