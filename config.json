@@ -79,6 +79,15 @@
       "port": "",
       "base_url_template": "",
       "api_key": ""
+    },
+    "categorization": {
+      "id": "",
+      "name": "Memory Categorization Model",
+      "description": "Model for categorizing memories into types (empty = use chairman)",
+      "ip": "",
+      "port": "",
+      "base_url_template": "",
+      "api_key": ""
     }
   },
   "memory": {
@@ -88,7 +97,8 @@
     "group_id": "llm_council",
     "record_user_messages": true,
     "record_council_responses": true,
-    "record_chairman_synthesis": true
+    "record_chairman_synthesis": true,
+    "categorization_enabled": false
   },
   "deliberation": {
     "rounds": 2,

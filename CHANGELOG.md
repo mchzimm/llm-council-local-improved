@@ -4,6 +4,30 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.34.0
+**Branch:** `v0.34.0`  
+**Completed:** 2025-11-30 10:40 UTC | 2025-11-30 02:40 PST
+
+**Features:**
+- **Memory type categorization system**: Categorizes memories into human memory types
+  - 8 memory types: Episodic, Semantic, Procedural, Priming, Emotional, Prospective, Autobiographical, Spatial
+  - LLM-based classification of content before storing
+  - Stores in type-specific groups (e.g., `llm_council_semantic`, `llm_council_episodic`)
+  - Searches across all memory type groups
+  - Returns results with memory type context for better LLM understanding
+  - Configurable: `categorization_enabled` setting (default: false for performance)
+  - New config option: `models.categorization` for dedicated categorization model
+
+**Changes:**
+- `backend/memory_service.py` - Added memory types, classification, multi-group storage/search
+- `config.json` - Added `categorization` model config and `categorization_enabled` setting
+
+**Notes:**
+- Categorization is disabled by default for performance (classification adds ~1 LLM call per memory)
+- Enable via `memory.categorization_enabled: true` in config.json
+
+---
+
 ### v0.33.0
 **Branch:** `v0.33.0`  
 **Completed:** 2025-11-30 09:25 UTC | 2025-11-30 01:25 PST
