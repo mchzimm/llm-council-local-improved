@@ -4,6 +4,23 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.32.0
+**Branch:** `v0.32.0`  
+**Completed:** 2025-11-30 06:50 UTC | 2025-11-29 22:50 PST
+
+**Features:**
+- **Conversation Filter System (CFS) UI**: Added filter tabs to sidebar
+  - Three filter groups: All, User, Test
+  - User filter: excludes conversations with #auto or #test tags
+  - Test filter: shows only conversations with both #auto AND #test tags
+  - Parses `<!-- tags: #tag1 #tag2 | ... -->` from message content
+
+**Changes:**
+- `frontend/src/components/Sidebar.jsx` - Added CFS state, filter logic, and tab UI
+- `frontend/src/components/Sidebar.css` - Added CFS tab styles
+
+---
+
 ### v0.31.0
 **Branch:** `v0.31.0`  
 **Completed:** 2025-11-30 06:35 UTC | 2025-11-29 22:35 PST

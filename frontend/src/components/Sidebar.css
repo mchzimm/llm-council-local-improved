@@ -215,6 +215,39 @@
   margin: 0 12px;
 }
 
+/* Conversation Filter System (CFS) Tabs */
+.cfs-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px;
+  background: #f0f0f0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.cfs-tab {
+  flex: 1;
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.cfs-tab:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #333;
+}
+
+.cfs-tab.active {
+  background: #fff;
+  color: #1976d2;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
 .conversation-list {
   flex: 1;
   overflow-y: auto;

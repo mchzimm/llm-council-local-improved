@@ -16,6 +16,11 @@ export default function Sidebar({
   const [deletedConversations, setDeletedConversations] = useState([]);
   const [hoveredDeleteBtn, setHoveredDeleteBtn] = useState(null);
   const [duplicateInfo, setDuplicateInfo] = useState(null);
+  
+  // Conversation Filter System (CFS) state
+  const [showCfsOverlay, setShowCfsOverlay] = useState(false);
+  const [activeFilterGroup, setActiveFilterGroup] = useState('all'); // 'all', 'user', 'test'
+  const cfsOverlayRef = useRef(null);
   const [isDeletingDuplicates, setIsDeletingDuplicates] = useState(false);
   
   // MCP status state
@@ -205,8 +210,49 @@ export default function Sidebar({
     });
   }
 
-  // Filter conversations to exclude duplicates (they're shown in duplicates section)
-  const filteredConversations = conversations.filter(conv => !duplicateIds.has(conv.id));
+  // Extract tags from conversation (looks for <!-- tags: #tag1 #tag2 | ... --> pattern)
+  const getConversationTags = (conv) => {
+    const tags = new Set();
+    if (conv.messages) {
+      for (const msg of conv.messages) {
+        if (msg.content) {
+          const match = msg.content.match(/<!--\s*tags:\s*([^|]+)/i);
+          if (match) {
+            const tagStr = match[1];
+            const foundTags = tagStr.match(/#\w+/g);
+            if (foundTags) {
+              foundTags.forEach(t => tags.add(t.toLowerCase()));
+            }
+          }
+        }
+      }
+    }
+    return tags;
+  };
+
+  // Check if conversation matches current filter
+  const conversationMatchesFilter = (conv) => {
+    if (activeFilterGroup === 'all') return true;
+    
+    const tags = getConversationTags(conv);
+    
+    if (activeFilterGroup === 'user') {
+      // User group: exclude conversations with #auto or #test tags
+      return !tags.has('#auto') && !tags.has('#test');
+    }
+    
+    if (activeFilterGroup === 'test') {
+      // Test group: include only conversations with both #auto AND #test
+      return tags.has('#auto') && tags.has('#test');
+    }
+    
+    return true;
+  };
+
+  // Filter conversations to exclude duplicates and apply CFS filter
+  const filteredConversations = conversations
+    .filter(conv => !duplicateIds.has(conv.id))
+    .filter(conversationMatchesFilter);
 
   // Get tools for a specific server
   const getServerTools = (serverName) => {
@@ -307,6 +353,31 @@ export default function Sidebar({
       </div>
 
       <div className="separator" />
+
+      {/* Conversation Filter System (CFS) */}
+      <div className="cfs-tabs">
+        <button 
+          className={`cfs-tab ${activeFilterGroup === 'all' ? 'active' : ''}`}
+          onClick={() => setActiveFilterGroup('all')}
+          title="Show all conversations"
+        >
+          All
+        </button>
+        <button 
+          className={`cfs-tab ${activeFilterGroup === 'user' ? 'active' : ''}`}
+          onClick={() => setActiveFilterGroup('user')}
+          title="Show user conversations (exclude #auto #test)"
+        >
+          User
+        </button>
+        <button 
+          className={`cfs-tab ${activeFilterGroup === 'test' ? 'active' : ''}`}
+          onClick={() => setActiveFilterGroup('test')}
+          title="Show test conversations (#auto AND #test)"
+        >
+          Test
+        </button>
+      </div>
 
       <div className="conversation-list">
         {!isRecycleBinView ? (

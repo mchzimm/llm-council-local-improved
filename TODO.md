@@ -21,14 +21,6 @@ This file tracks pending changes organized by priority. AI agents should process
 ## Future
 <!-- Ideas and enhancements for later consideration. No limit. -->
 
-- [ ] **[FEATURE]** Conversation filtering UI (CFS) - Phase 2
-  - CFS overlay menu (same style as MCP servers overlay) with filter groups
-  - Groups with +/- buttons to add/remove tags
-  - Rules button for each group with include/exclude logic
-  - System groups: `user` (exclude #test), `test` (include #auto AND #test)
-  - Tags already stored via test runner `--auto-test` flag (v0.31.0)
-  - Related: frontend/src/App.jsx, new frontend/src/components/ConversationFilter.jsx
-
 - [ ] **[REFACTOR]** Config restructure - providers, individuals, teams, support
   - New structure with inference providers, model definitions, personalities
   - Teams with member_count, shared personality traits
