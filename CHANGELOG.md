@@ -4,6 +4,24 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.36.2
+**Branch:** `v0.36.2`  
+**Completed:** 2025-11-30 15:35 UTC | 2025-11-30 07:35 PST
+
+**Fixes:**
+- **Memory context injection**: AI name (Aether) and user name now injected into system prompt
+  - Added `get_memory_context()` function to build identity context string
+  - System prompt now includes "IDENTITY FROM MEMORY" section with loaded names
+  - Applies to both direct responses and council deliberation
+- **Root cause**: Models were returning pre-trained names because memory context wasn't being passed to LLM
+
+**Changes:**
+- `backend/council.py` - Import memory_service, add `get_memory_context()` function
+- `backend/council.py` - Inject memory context into system message in `chairman_direct_response()`
+- `backend/council.py` - Inject memory context into system message in `stage1_collect_responses_streaming()`
+
+---
+
 ### v0.36.1
 **Branch:** `v0.36.1`  
 **Completed:** 2025-11-30 14:55 UTC | 2025-11-30 06:55 PST

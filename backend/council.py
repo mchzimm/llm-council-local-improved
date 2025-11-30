@@ -17,6 +17,33 @@ from .model_metrics import (
 )
 from .mcp.registry import get_mcp_registry
 from .prompt_library import generate_extraction_prompt, find_matching_prompt
+from .memory_service import get_memory_service
+
+
+def get_memory_context() -> str:
+    """
+    Build memory context string with AI/user names for system prompt injection.
+    Returns empty string if memory service unavailable or names not loaded.
+    """
+    try:
+        memory_service = get_memory_service()
+        if not memory_service.is_available or not memory_service.names_loaded:
+            return ""
+        
+        context_parts = []
+        
+        if memory_service.ai_name:
+            context_parts.append(f"Your name is {memory_service.ai_name}.")
+        
+        if memory_service.user_name:
+            context_parts.append(f"The user's name is {memory_service.user_name}.")
+        
+        if context_parts:
+            return "IDENTITY FROM MEMORY:\n" + " ".join(context_parts) + "\n\n"
+        
+        return ""
+    except Exception:
+        return ""
 
 
 # ============== Response Post-Processing ==============
@@ -341,6 +368,14 @@ Question: {user_query}
 Provide a helpful, accurate answer. Be concise but complete."""
     
     # Build messages with optional system message
+    # Prepend memory context (AI/user names) if available
+    memory_context = get_memory_context()
+    if system_message:
+        system_message = memory_context + system_message
+    elif memory_context:
+        # Create system message just for memory context
+        system_message = memory_context.strip()
+    
     if system_message:
         messages = [
             {"role": "system", "content": system_message},
@@ -2362,6 +2397,14 @@ Question: {user_query}"""
         prompt = user_query
     
     # Build messages with optional system message for tool context
+    # Prepend memory context (AI/user names) if available
+    memory_context = get_memory_context()
+    if system_message:
+        system_message = memory_context + system_message
+    elif memory_context:
+        # Create system message just for memory context
+        system_message = memory_context.strip()
+    
     if system_message:
         messages = [
             {"role": "system", "content": system_message},
