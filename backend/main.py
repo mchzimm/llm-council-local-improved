@@ -711,7 +711,7 @@ async def send_message_stream_tokens(conversation_id: str, request: SendMessageR
             # Only consider websearch for mid-deliberation (other tools should be used upfront)
             stage1_summary = "\n".join([f"- {r.get('model', 'unknown')}: {r.get('response', '')[:200]}..." for r in stage1_results])
             registry = get_mcp_registry()
-            available_tools = registry.format_tools_for_prompt() if registry.is_enabled() else ""
+            available_tools = registry.format_tools_for_prompt() if registry.all_tools else ""
             
             previous_tools = [tool_result] if tool_result and tool_result.get('success') else []
             mid_assessment = await assess_tool_needs_mid_deliberation(

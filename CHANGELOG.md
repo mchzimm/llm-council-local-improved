@@ -4,6 +4,20 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.30.2
+**Branch:** `v0.30.2`  
+**Completed:** 2025-11-30 02:46 UTC | 2025-11-29 18:46 PST
+
+**Fixes:**
+- **AttributeError: 'MCPRegistry' object has no attribute 'is_enabled'**: Fixed incorrect method call
+  - Changed `registry.is_enabled()` to `registry.all_tools` (truthy check)
+  - The `is_enabled()` method doesn't exist; `all_tools` dict is the correct way to check
+
+**Changes:**
+- `backend/main.py` - Fixed registry method call in mid-deliberation assessment
+
+---
+
 ### v0.30.1
 **Branch:** `v0.30.0` (amended)  
 **Completed:** 2025-11-30 00:20 UTC | 2025-11-29 16:20 PST
