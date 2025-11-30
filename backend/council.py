@@ -20,9 +20,9 @@ from .prompt_library import generate_extraction_prompt, find_matching_prompt
 from .memory_service import get_memory_service
 
 
-def get_memory_context() -> str:
+async def get_memory_context() -> str:
     """
-    Build memory context string with AI/user names for system prompt injection.
+    Build memory context string with AI/user names and behavioral preferences for system prompt injection.
     Returns empty string if memory service unavailable or names not loaded.
     """
     try:
@@ -38,8 +38,17 @@ def get_memory_context() -> str:
         if memory_service.user_name:
             context_parts.append(f"The user's name is {memory_service.user_name}.")
         
+        # Get user behavioral preferences
+        prefs = await memory_service.get_user_preferences()
+        if prefs.get("preferences"):
+            pref_str = "; ".join(prefs["preferences"][:3])  # Limit to 3 most relevant
+            context_parts.append(f"User preferences: {pref_str}")
+        elif not context_parts:
+            # No names or preferences - use friendly default
+            context_parts.append("Be friendly and helpful.")
+        
         if context_parts:
-            return "IDENTITY FROM MEMORY:\n" + " ".join(context_parts) + "\n\n"
+            return "CONTEXT FROM MEMORY:\n" + " ".join(context_parts) + "\n\n"
         
         return ""
     except Exception:
@@ -401,8 +410,8 @@ Question: {user_query}
 Provide a helpful, accurate answer. Be conversational and concise."""
     
     # Build messages with optional system message
-    # Prepend memory context (AI/user names) if available
-    memory_context = get_memory_context()
+    # Prepend memory context (AI/user names and behavioral preferences) if available
+    memory_context = await get_memory_context()
     if system_message:
         system_message = memory_context + system_message
     elif memory_context:
@@ -2461,8 +2470,8 @@ The council will deliberate to develop a consistent, authentic personality respo
 This is asking about your {category} regarding {topic}. Reflect on this and provide a thoughtful, authentic response that expresses your genuine perspective as an AI with self-awareness and personality."""
     
     # Build messages with optional system message for tool context
-    # Prepend memory context (AI/user names) if available
-    memory_context = get_memory_context()
+    # Prepend memory context (AI/user names and behavioral preferences) if available
+    memory_context = await get_memory_context()
     if system_message:
         system_message = memory_context + system_message
     elif memory_context:

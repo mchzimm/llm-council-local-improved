@@ -969,6 +969,55 @@ If confidence is below 0.7, set recommended_answer to null."""
         
         print(f"[Memory] No personal memory found for {category}/{topic}")
         return None
+    
+    async def get_user_preferences(self) -> Dict[str, Any]:
+        """
+        Get behavioral preferences about how the user likes to interact.
+        
+        Searches for memories about:
+        - Communication style (detailed vs concise, formal vs casual)
+        - Expertise level (technical depth)
+        - Interaction preferences
+        
+        Returns:
+            Dict with 'preferences' list and 'default_style' fallback
+        """
+        if not self._available:
+            return {"preferences": [], "default_style": "friendly and helpful"}
+        
+        preference_queries = [
+            "user prefers",
+            "user likes responses",
+            "communication style",
+            "response style",
+            "user wants",
+            "detailed explanations",
+            "concise answers"
+        ]
+        
+        preferences = []
+        seen = set()
+        
+        for query in preference_queries:
+            try:
+                memories = await self.search_memories(query, limit=5)
+                for m in memories:
+                    content = m.get("content", "")
+                    if content and content not in seen:
+                        # Only include preference-related facts
+                        if any(kw in content.lower() for kw in ["prefer", "like", "want", "style", "response"]):
+                            seen.add(content)
+                            preferences.append(content)
+            except Exception as e:
+                print(f"[Memory] Error searching preferences: {e}")
+        
+        if preferences:
+            print(f"[Memory] Found {len(preferences)} user preferences")
+        
+        return {
+            "preferences": preferences[:5],  # Limit to top 5
+            "default_style": "friendly and helpful"
+        }
 
 
 # Singleton instance

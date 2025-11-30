@@ -17,7 +17,14 @@ In a bit more detail, here is what happens when you submit a query:
 
 ## Key Features
 
-### Current Release (v0.38.0)
+### Current Release (v0.38.1)
+- **User Behavioral Preferences in Context**: Memory service retrieves user preferences for personalized responses
+  - Searches for preference-related memories (communication style, response preferences)
+  - Preferences included in system prompt alongside AI/user names
+  - Falls back to "friendly and helpful" if no preferences stored
+  - More personalized and contextual interactions
+
+### Previous Release (v0.38.0)
 - **Time-Aware Greetings**: Greetings now use appropriate time-of-day phrases
   - "Good morning" (5am-12pm), "Good afternoon" (12pm-5pm), "Good evening" (5pm-9pm)
   - Greeting context included in system prompt for all chat responses

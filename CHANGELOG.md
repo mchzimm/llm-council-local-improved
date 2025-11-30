@@ -4,6 +4,24 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.38.1
+**Branch:** `v0.38.1`  
+**Completed:** 2025-11-30 17:00 UTC | 2025-11-30 09:00 PST
+
+**Features:**
+- **User Behavioral Preferences in Context**: Memory service now retrieves user preferences for personalized responses
+  - Added `get_user_preferences()` method to `MemoryService` class
+  - Searches for preference-related memories (communication style, response preferences)
+  - Falls back to "friendly and helpful" if no preferences found
+  - Preferences included in system prompt context alongside AI/user names
+
+**Technical Details:**
+- `backend/memory_service.py` - Added `get_user_preferences()` async method
+- `backend/council.py` - Converted `get_memory_context()` to async, added preference lookup
+- Updated function header from "IDENTITY FROM MEMORY" to "CONTEXT FROM MEMORY"
+
+---
+
 ### v0.38.0
 **Branch:** `v0.38.0`  
 **Completed:** 2025-11-30 16:50 UTC | 2025-11-30 08:50 PST
