@@ -4,6 +4,22 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.30.4
+**Branch:** `v0.30.4`  
+**Completed:** 2025-11-30 04:05 UTC | 2025-11-29 20:05 PST
+
+**Documentation:**
+- **Enhanced versioning logic in AGENTS.md**: Added change classification system
+  - New table for classifying change types (code fix, logic fix, UI fix, UX fix, UI addition, UX addition, feature addition)
+  - New table for classifying extent (minor vs major)
+  - Clear rules: only feature additions and major UI/UX additions bump feature version
+  - All fixes and minor additions only bump fix version
+
+**Changes:**
+- `AGENTS.md` - Updated "Version Number Rules" section with classification tables and examples
+
+---
+
 ### v0.30.3
 **Branch:** `v0.30.3`  
 **Completed:** 2025-11-30 03:30 UTC | 2025-11-29 19:30 PST

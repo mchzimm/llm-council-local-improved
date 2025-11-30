@@ -248,9 +248,46 @@ This means you forgot to create a version branch first. Follow the workflow belo
 The project follows semantic versioning with the format `<release>.<feature>.<fix>`:
 
 ### Version Number Rules
-- **Release** (x.0.0): Increment when all major features are implemented to completion (confirmed by user)
-- **Feature** (0.x.0): Increment whenever a new feature is implemented
-- **Fix** (0.0.x): Increment with every bug fix being implemented
+
+**Step 1: Classify the Change Type and Extent**
+
+| Change Type | Description | Examples |
+|-------------|-------------|----------|
+| **Code Fix** | Bug fix in backend/logic | API error, calculation bug, null pointer |
+| **Logic Fix** | Fix incorrect behavior | Wrong tool selection, bad routing |
+| **UI Fix** | Visual bug fix | Broken layout, wrong colors, missing element |
+| **UX Fix** | Interaction bug fix | Button not working, form not submitting |
+| **UI Addition** | New visual element | New badge, icon, status indicator |
+| **UX Addition** | New interaction/flow | New button action, keyboard shortcut |
+| **Feature Addition** | New capability | New tool integration, new API endpoint |
+
+| Extent | Description | Examples |
+|--------|-------------|----------|
+| **Minor** | Small, low-impact change | Tweak spacing, fix typo, add tooltip |
+| **Major** | Significant, user-noticeable | New panel, new workflow, new integration |
+
+**Step 2: Determine Version Increment**
+
+```
+FEATURE version (0.X.0) - increment middle number, reset fix to 0:
+  ✓ Feature additions (any extent)
+  ✓ Major UI additions (new panels, significant visual changes)
+  ✓ Major UX additions (new workflows, significant interaction changes)
+
+FIX version (0.x.Y) - increment last number only:
+  ✓ All bug fixes (code, logic, UI, UX)
+  ✓ Minor UI additions (small visual tweaks)
+  ✓ Minor UX additions (small interaction improvements)
+```
+
+**Examples:**
+- `v0.30.3 → v0.31.0`: Adding new MCP tool integration (feature)
+- `v0.30.3 → v0.31.0`: Adding collapsible side panel (major UI addition)
+- `v0.30.3 → v0.30.4`: Fixing null pointer error (code fix)
+- `v0.30.3 → v0.30.4`: Adding loading spinner to button (minor UI addition)
+- `v0.30.3 → v0.30.4`: Fixing wrong tool being selected (logic fix)
+
+**Release** (x.0.0): Increment when all major features are implemented to completion (confirmed by user)
 
 **⚠️ CRITICAL: Version numbers must be sequential and monotonically increasing!**
 - Always base the next version on the HIGHEST existing version number
@@ -281,16 +318,17 @@ The project follows semantic versioning with the format `<release>.<feature>.<fi
 
 ### Mandatory Workflow (Follow These Steps In Order)
 
-**Step 1: Determine Next Version**
+**Step 1: Classify Change & Determine Next Version**
 ```bash
-# CRITICAL: Find the highest version number, not just list branches
+# CRITICAL: Find the highest version number first
 git branch -a | grep -oE "v[0-9]+\.[0-9]+\.[0-9]+" | sort -V | tail -1
 ```
-- Check the HIGHEST version number across ALL branches
-- If implementing features: increment middle number, reset fix to 0 (e.g., v0.14.0 → v0.15.0)
-- If fixing bugs: increment last number from highest version (e.g., v0.14.0 → v0.14.1)
-- Multiple features in one session: use single feature increment
-- **NEVER go backwards** - if v0.14.0 exists, next version must be v0.14.x or v0.15.0+
+
+1. **Classify your change** using the table above (type + extent)
+2. **Determine version increment**:
+   - Feature additions OR major UI/UX additions → increment FEATURE (middle): `v0.30.3 → v0.31.0`
+   - Bug fixes OR minor additions → increment FIX (last): `v0.30.3 → v0.30.4`
+3. **NEVER go backwards** - if v0.14.0 exists, next version must be v0.14.x or v0.15.0+
 
 **Step 2: Create Version Branch BEFORE Coding**
 ```bash
