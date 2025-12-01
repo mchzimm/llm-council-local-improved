@@ -17,7 +17,14 @@ In a bit more detail, here is what happens when you submit a query:
 
 ## Key Features
 
-### Current Release (v0.40.0)
+### Current Release (v0.41.0)
+- **Conversation Reconstruction Script**: Re-run past conversations through current pipeline
+  - Extract user messages and replay through updated v0.40.0+ system
+  - Supports partial ID matching (e.g., `c44e557c` finds full UUID)
+  - `--dry-run` preview, `--stream` for streaming endpoint
+  - Creates new conversation reflecting latest processing improvements
+
+### Previous Release (v0.40.0)
 - **Short-Term Memory System**: Automatic extraction of relevant conversation information
   - Stores key facts, names, dates, tasks discussed in conversations
   - Uses dedicated FalkorDB graph (`llm_council_short_term`)
