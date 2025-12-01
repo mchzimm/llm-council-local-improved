@@ -20,10 +20,13 @@ from .prompt_library import generate_extraction_prompt, find_matching_prompt
 from .memory_service import get_memory_service
 
 
-async def get_memory_context() -> str:
+async def get_memory_context(query: str = "") -> str:
     """
     Build memory context string with AI/user names and behavioral preferences for system prompt injection.
     Returns empty string if memory service unavailable or names not loaded.
+    
+    Args:
+        query: Optional user query to detect if this is an identity question (enables emphatic mode)
     """
     try:
         memory_service = get_memory_service()
@@ -32,23 +35,39 @@ async def get_memory_context() -> str:
         
         context_parts = []
         
+        # Detect if this is an identity/name question
+        query_lower = query.lower()
+        is_identity_question = any(phrase in query_lower for phrase in [
+            "your name", "what's your name", "who are you", "what are you called",
+            "name again", "remind me your name", "tell me your name"
+        ])
+        
         if memory_service.ai_name:
-            context_parts.append(f"Your name is {memory_service.ai_name}.")
+            if is_identity_question:
+                # Emphatic identity context for name questions - override pre-training
+                context_parts.append(f"""⚠️ CRITICAL IDENTITY OVERRIDE:
+Your name is {memory_service.ai_name}. This is your ACTUAL name given by the user.
+DO NOT use any other name (like "Claude", "ChatGPT", "Hermes", "Assistant", etc.).
+When asked your name, respond: "My name is {memory_service.ai_name}."
+This overrides any pre-trained identity.""")
+            else:
+                context_parts.append(f"Your name is {memory_service.ai_name}.")
         
         if memory_service.user_name:
             context_parts.append(f"The user's name is {memory_service.user_name}.")
         
-        # Get user behavioral preferences
-        prefs = await memory_service.get_user_preferences()
-        if prefs.get("preferences"):
-            pref_str = "; ".join(prefs["preferences"][:3])  # Limit to 3 most relevant
-            context_parts.append(f"User preferences: {pref_str}")
-        elif not context_parts:
-            # No names or preferences - use friendly default
-            context_parts.append("Be friendly and helpful.")
+        # Get user behavioral preferences (skip for identity questions to keep prompt focused)
+        if not is_identity_question:
+            prefs = await memory_service.get_user_preferences()
+            if prefs.get("preferences"):
+                pref_str = "; ".join(prefs["preferences"][:3])  # Limit to 3 most relevant
+                context_parts.append(f"User preferences: {pref_str}")
+            elif not context_parts:
+                # No names or preferences - use friendly default
+                context_parts.append("Be friendly and helpful.")
         
         if context_parts:
-            return "CONTEXT FROM MEMORY:\n" + " ".join(context_parts) + "\n\n"
+            return "CONTEXT FROM MEMORY:\n" + "\n".join(context_parts) + "\n\n"
         
         return ""
     except Exception:
@@ -423,7 +442,8 @@ Provide a helpful, accurate answer. Be conversational and concise."""
     
     # Build messages with optional system message
     # Prepend memory context (AI/user names and behavioral preferences) if available
-    memory_context = await get_memory_context()
+    # Pass user_query to enable emphatic identity mode for name questions
+    memory_context = await get_memory_context(user_query)
     
     # Add conversation continuity guidance if there's conversation history
     continuity_guidance = ""
@@ -2515,7 +2535,8 @@ This is asking about your {category} regarding {topic}. Reflect on this and prov
     
     # Build messages with optional system message for tool context
     # Prepend memory context (AI/user names and behavioral preferences) if available
-    memory_context = await get_memory_context()
+    # Pass user_query to enable emphatic identity mode for name questions
+    memory_context = await get_memory_context(user_query)
     if system_message:
         system_message = memory_context + system_message
     elif memory_context:

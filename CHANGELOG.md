@@ -4,6 +4,19 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.42.6
+**Branch:** `v0.42.6`  
+**Completed:** 2025-12-01 11:30 UTC | 2025-12-01 03:30 PST
+
+**Fixes:**
+- **Emphatic AI Identity Context**: Enhanced memory context to strongly override LLM pre-trained names
+  - When user asks identity questions ("what's your name?", "who are you?", etc.)
+  - System now injects emphatic identity override context instructing LLM to use the stored name
+  - Prevents LLMs from using their default names (Claude, Hermes, etc.) instead of user-assigned name (Aether)
+  - Modified `get_memory_context()` to accept query parameter for identity detection
+
+---
+
 ### v0.42.5
 **Branch:** `v0.42.5`  
 **Completed:** 2025-12-01 10:00 UTC | 2025-12-01 02:00 PST
