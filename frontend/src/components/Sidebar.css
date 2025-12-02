@@ -215,6 +215,11 @@
   margin: 0 12px;
 }
 
+/* Conversation Filter System (CFS) Container */
+.cfs-container {
+  position: relative;
+}
+
 /* Conversation Filter System (CFS) Tabs */
 .cfs-tabs {
   display: flex;
@@ -246,6 +251,347 @@
   background: #fff;
   color: #1976d2;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* CFS Config Button */
+.cfs-config-btn {
+  padding: 6px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  opacity: 0.6;
+}
+
+.cfs-config-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  opacity: 1;
+}
+
+/* CFS Overlay */
+.cfs-overlay {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: rgba(40, 40, 40, 0.98);
+  border-radius: 8px;
+  padding: 12px;
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.cfs-overlay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #444;
+}
+
+.cfs-close-btn {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.cfs-close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* Add Group Input */
+.cfs-add-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.cfs-add-group input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #555;
+  border-radius: 6px;
+  background: #333;
+  color: #fff;
+  font-size: 13px;
+}
+
+.cfs-add-group input::placeholder {
+  color: #888;
+}
+
+.cfs-add-group button {
+  padding: 8px 14px;
+  border: none;
+  background: #4caf50;
+  color: white;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.cfs-add-group button:hover {
+  background: #43a047;
+}
+
+/* Group List */
+.cfs-group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cfs-group-item {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.cfs-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.cfs-group-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.cfs-default-badge {
+  font-size: 10px;
+  color: #888;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.cfs-remove-group-btn,
+.cfs-edit-rules-btn {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+
+.cfs-remove-group-btn:hover {
+  background: rgba(244, 67, 54, 0.2);
+  color: #f44336;
+}
+
+.cfs-edit-rules-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* Rules Editor */
+.cfs-rules-editor {
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.cfs-no-rules {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+  padding: 8px;
+  text-align: center;
+}
+
+.cfs-rule {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-left: 3px solid #888;
+}
+
+.cfs-rule.include {
+  border-left-color: #4caf50;
+}
+
+.cfs-rule.exclude {
+  border-left-color: #f44336;
+}
+
+.cfs-rule-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.cfs-rule-type {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.cfs-rule-type.include {
+  background: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+}
+
+.cfs-rule-type.exclude {
+  background: rgba(244, 67, 54, 0.2);
+  color: #f44336;
+}
+
+.cfs-logic-toggle {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #aaa;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.cfs-logic-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.cfs-logic-toggle.and {
+  border-color: #2196f3;
+  color: #2196f3;
+}
+
+.cfs-logic-toggle.or {
+  border-color: #ff9800;
+  color: #ff9800;
+}
+
+.cfs-remove-rule-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.cfs-remove-rule-btn:hover {
+  background: rgba(244, 67, 54, 0.2);
+  color: #f44336;
+}
+
+/* Rule Tags */
+.cfs-rule-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.cfs-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  font-size: 12px;
+  color: #ddd;
+  font-family: monospace;
+}
+
+.cfs-tag button {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 2px;
+}
+
+.cfs-tag button:hover {
+  color: #f44336;
+}
+
+.cfs-tag-input {
+  padding: 4px 8px;
+  border: 1px dashed #555;
+  border-radius: 4px;
+  background: transparent;
+  color: #aaa;
+  font-size: 12px;
+  width: 70px;
+}
+
+.cfs-tag-input:focus {
+  border-color: #1976d2;
+  outline: none;
+}
+
+/* Add Rule Buttons */
+.cfs-add-rules {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.cfs-add-rule-btn {
+  flex: 1;
+  padding: 8px;
+  border: 1px dashed #555;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.cfs-add-rule-btn.include {
+  color: #4caf50;
+  border-color: rgba(76, 175, 80, 0.3);
+}
+
+.cfs-add-rule-btn.include:hover {
+  background: rgba(76, 175, 80, 0.1);
+  border-color: #4caf50;
+}
+
+.cfs-add-rule-btn.exclude {
+  color: #f44336;
+  border-color: rgba(244, 67, 54, 0.3);
+}
+
+.cfs-add-rule-btn.exclude:hover {
+  background: rgba(244, 67, 54, 0.1);
+  border-color: #f44336;
 }
 
 .conversation-list {

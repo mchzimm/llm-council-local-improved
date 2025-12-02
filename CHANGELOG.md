@@ -4,6 +4,22 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.43.0
+**Branch:** `v0.43.0`  
+**Completed:** 2025-12-02 16:15 UTC | 2025-12-02 08:15 PST
+
+**Features:**
+- **CFS Overlay Configuration System**: Full rules-based conversation filter system
+  - Added ⚙️ config button next to filter tabs to open overlay
+  - Groups support add (+) / remove (−) functionality
+  - Rules editor with include/exclude rule types
+  - AND/OR logic toggle per rule for flexible tag matching
+  - Tag management with add/remove within rules
+  - Dark overlay UI matching MCP servers overlay style
+  - Default groups: All, User (exclude #auto #test), Test (include #auto AND #test)
+  - Custom groups and rules persist in localStorage
+  - Dynamic tab generation from group list
+
 ### v0.42.10
 **Branch:** `v0.42.10`  
 **Completed:** 2025-12-02 05:10 UTC | 2025-12-01 21:10 PST

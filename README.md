@@ -17,7 +17,17 @@ In a bit more detail, here is what happens when you submit a query:
 
 ## Key Features
 
-### Current Release (v0.42.2)
+### Current Release (v0.43.0)
+- **CFS Overlay Configuration**: Full conversation filter system with rules-based logic
+  - Click ⚙️ button to open CFS configuration overlay
+  - Add custom filter groups with + button
+  - Each group supports multiple include/exclude rules
+  - Rules with tag filtering (e.g., #auto, #test, #dev)
+  - AND/OR logic toggle per rule for flexible matching
+  - Default groups: All, User (exclude #auto #test), Test (include #auto AND #test)
+  - Groups and rules persist in localStorage
+
+### Previous Release (v0.42.2)
 - **UI State Fixes**: Multiple fixes for classification and frame state
   - Classification spinner now correctly disappears when Stage 1 begins
   - Tool steps collapse correctly for saved conversations
@@ -30,34 +40,6 @@ In a bit more detail, here is what happens when you submit a query:
   - Saved conversations load with frames collapsed by default
   - Click to expand and view details as needed
   - Cleaner UI focused on final answers
-
-### Previous Release (v0.41.3)
-- **Saved Conversation Display Fix**: Proper display when loading saved conversations
-  - Direct responses correctly show "⚡ Direct" badge and skip deliberation UI
-  - Classification badge correctly infers type from stored data
-  - Tool results display execution time correctly
-  - "Final Council Answer" only shows for deliberation responses
-
-### Previous Release (v0.41.0)
-
-### Previous Release (v0.40.0)
-- **Short-Term Memory System**: Automatic extraction of relevant conversation information
-  - Stores key facts, names, dates, tasks discussed in conversations
-  - Uses dedicated FalkorDB graph (`llm_council_short_term`)
-  - Auto-cleanup of memories older than 3 days
-  - Non-blocking async recording after each conversation
-
-- **Enhanced Final Answer Synthesis**: Creates superior response from ALL council inputs
-  - Extracts best parts from every council member, not just the winner
-  - Combines unique insights, examples, and perspectives
-  - Rankings used to weight emphasis, not exclude contributions
-
-- **Improved Collapsible Structure**: Stage 3 now inside collapsed deliberation
-  - All three stages wrapped in collapsible for complete view
-  - Final Answer shown prominently OUTSIDE for visibility
-  - Better separation of process vs result
-
-### Previous Release (v0.39.0)
 - **Collapsible Deliberation Process**: Council deliberation auto-collapses when complete
   - Stage 1, 2, 3 wrapped in expandable `<details>` element
   - "Final Council Answer" displayed prominently outside collapsible

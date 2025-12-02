@@ -25,9 +25,22 @@ export default function Sidebar({
   
   // Conversation Filter System (CFS) state
   const [showCfsOverlay, setShowCfsOverlay] = useState(false);
-  const [activeFilterGroup, setActiveFilterGroup] = useState('user'); // 'all', 'user', 'test' - default to 'user'
+  const [activeFilterGroup, setActiveFilterGroup] = useState('user'); // Active group name - default to 'user'
   const cfsOverlayRef = useRef(null);
   const [isDeletingDuplicates, setIsDeletingDuplicates] = useState(false);
+  
+  // CFS custom groups (stored in localStorage)
+  const [cfsGroups, setCfsGroups] = useState(() => {
+    const saved = localStorage.getItem('llm-council-cfs-groups');
+    return saved ? JSON.parse(saved) : [
+      { name: 'all', label: 'All', rules: [], isDefault: true },
+      { name: 'user', label: 'User', rules: [{ type: 'exclude', tags: ['#auto', '#test'], logic: 'AND' }], isDefault: true },
+      { name: 'test', label: 'Test', rules: [{ type: 'include', tags: ['#auto', '#test'], logic: 'AND' }], isDefault: true },
+    ];
+  });
+  const [editingGroup, setEditingGroup] = useState(null);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [newTagInput, setNewTagInput] = useState('');
   
   // MCP status state
   const [mcpStatus, setMcpStatus] = useState(null);
@@ -216,21 +229,139 @@ export default function Sidebar({
     });
   }
 
-  // Check if conversation matches current filter using tags from metadata
+  // Save CFS groups to localStorage when changed
+  useEffect(() => {
+    localStorage.setItem('llm-council-cfs-groups', JSON.stringify(cfsGroups));
+  }, [cfsGroups]);
+
+  // CFS group management functions
+  const addGroup = () => {
+    if (!newGroupName.trim()) return;
+    const groupName = newGroupName.trim().toLowerCase().replace(/\s+/g, '_');
+    if (cfsGroups.some(g => g.name === groupName)) {
+      alert('A group with this name already exists');
+      return;
+    }
+    setCfsGroups([...cfsGroups, { 
+      name: groupName, 
+      label: newGroupName.trim(), 
+      rules: [], 
+      isDefault: false 
+    }]);
+    setNewGroupName('');
+  };
+
+  const removeGroup = (groupName) => {
+    const group = cfsGroups.find(g => g.name === groupName);
+    if (group?.isDefault) {
+      alert('Cannot remove default groups');
+      return;
+    }
+    setCfsGroups(cfsGroups.filter(g => g.name !== groupName));
+    if (activeFilterGroup === groupName) {
+      setActiveFilterGroup('all');
+    }
+  };
+
+  const addRule = (groupName, ruleType) => {
+    setCfsGroups(cfsGroups.map(g => {
+      if (g.name === groupName) {
+        return {
+          ...g,
+          rules: [...g.rules, { type: ruleType, tags: [], logic: 'AND' }]
+        };
+      }
+      return g;
+    }));
+  };
+
+  const removeRule = (groupName, ruleIndex) => {
+    setCfsGroups(cfsGroups.map(g => {
+      if (g.name === groupName) {
+        return {
+          ...g,
+          rules: g.rules.filter((_, i) => i !== ruleIndex)
+        };
+      }
+      return g;
+    }));
+  };
+
+  const addTagToRule = (groupName, ruleIndex, tag) => {
+    if (!tag.trim()) return;
+    const normalizedTag = tag.startsWith('#') ? tag.toLowerCase() : `#${tag.toLowerCase()}`;
+    setCfsGroups(cfsGroups.map(g => {
+      if (g.name === groupName) {
+        return {
+          ...g,
+          rules: g.rules.map((rule, i) => {
+            if (i === ruleIndex && !rule.tags.includes(normalizedTag)) {
+              return { ...rule, tags: [...rule.tags, normalizedTag] };
+            }
+            return rule;
+          })
+        };
+      }
+      return g;
+    }));
+  };
+
+  const removeTagFromRule = (groupName, ruleIndex, tag) => {
+    setCfsGroups(cfsGroups.map(g => {
+      if (g.name === groupName) {
+        return {
+          ...g,
+          rules: g.rules.map((rule, i) => {
+            if (i === ruleIndex) {
+              return { ...rule, tags: rule.tags.filter(t => t !== tag) };
+            }
+            return rule;
+          })
+        };
+      }
+      return g;
+    }));
+  };
+
+  const toggleRuleLogic = (groupName, ruleIndex) => {
+    setCfsGroups(cfsGroups.map(g => {
+      if (g.name === groupName) {
+        return {
+          ...g,
+          rules: g.rules.map((rule, i) => {
+            if (i === ruleIndex) {
+              return { ...rule, logic: rule.logic === 'AND' ? 'OR' : 'AND' };
+            }
+            return rule;
+          })
+        };
+      }
+      return g;
+    }));
+  };
+
+  // Check if conversation matches current filter using rules-based system
   const conversationMatchesFilter = (conv) => {
-    if (activeFilterGroup === 'all') return true;
+    const group = cfsGroups.find(g => g.name === activeFilterGroup);
+    if (!group || group.rules.length === 0) return true; // 'all' or empty rules = show everything
     
     // Get tags from metadata (populated by backend)
-    const tags = new Set((conv.tags || []).map(t => t.toLowerCase()));
+    const convTags = new Set((conv.tags || []).map(t => t.toLowerCase()));
     
-    if (activeFilterGroup === 'user') {
-      // User group: exclude conversations with #auto or #test tags
-      return !tags.has('#auto') && !tags.has('#test');
-    }
-    
-    if (activeFilterGroup === 'test') {
-      // Test group: include only conversations with both #auto AND #test
-      return tags.has('#auto') && tags.has('#test');
+    // Apply all rules - all rules must pass (AND between rules)
+    for (const rule of group.rules) {
+      if (rule.tags.length === 0) continue; // Empty rule = skip
+      
+      const matchFunction = rule.logic === 'AND'
+        ? rule.tags.every(t => convTags.has(t))  // All tags must match
+        : rule.tags.some(t => convTags.has(t));   // Any tag must match
+      
+      if (rule.type === 'include' && !matchFunction) {
+        return false; // Must include but doesn't match
+      }
+      if (rule.type === 'exclude' && matchFunction) {
+        return false; // Must exclude but matches
+      }
     }
     
     return true;
@@ -364,28 +495,137 @@ export default function Sidebar({
       <div className="separator" />
 
       {/* Conversation Filter System (CFS) */}
-      <div className="cfs-tabs">
-        <button 
-          className={`cfs-tab ${activeFilterGroup === 'all' ? 'active' : ''}`}
-          onClick={() => setActiveFilterGroup('all')}
-          title="Show all conversations"
-        >
-          All
-        </button>
-        <button 
-          className={`cfs-tab ${activeFilterGroup === 'user' ? 'active' : ''}`}
-          onClick={() => setActiveFilterGroup('user')}
-          title="Show user conversations (exclude #auto #test)"
-        >
-          User
-        </button>
-        <button 
-          className={`cfs-tab ${activeFilterGroup === 'test' ? 'active' : ''}`}
-          onClick={() => setActiveFilterGroup('test')}
-          title="Show test conversations (#auto AND #test)"
-        >
-          Test
-        </button>
+      <div className="cfs-container">
+        <div className="cfs-tabs">
+          {cfsGroups.map(group => (
+            <button 
+              key={group.name}
+              className={`cfs-tab ${activeFilterGroup === group.name ? 'active' : ''}`}
+              onClick={() => setActiveFilterGroup(group.name)}
+              title={group.rules.length > 0 ? `Rules: ${group.rules.map(r => `${r.type} ${r.tags.join(` ${r.logic} `)}`).join('; ')}` : 'No rules - show all'}
+            >
+              {group.label}
+            </button>
+          ))}
+          <button 
+            className="cfs-config-btn"
+            onClick={() => setShowCfsOverlay(!showCfsOverlay)}
+            title="Configure filter groups"
+          >
+            ⚙️
+          </button>
+        </div>
+        
+        {/* CFS Configuration Overlay */}
+        {showCfsOverlay && (
+          <div className="cfs-overlay" ref={cfsOverlayRef}>
+            <div className="cfs-overlay-header">
+              <span>Filter Groups</span>
+              <button className="cfs-close-btn" onClick={() => setShowCfsOverlay(false)}>✕</button>
+            </div>
+            
+            {/* Add new group */}
+            <div className="cfs-add-group">
+              <input 
+                type="text"
+                placeholder="New group name..."
+                value={newGroupName}
+                onChange={(e) => setNewGroupName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && addGroup()}
+              />
+              <button onClick={addGroup} title="Add group">+</button>
+            </div>
+            
+            {/* Group list */}
+            <div className="cfs-group-list">
+              {cfsGroups.map(group => (
+                <div key={group.name} className="cfs-group-item">
+                  <div className="cfs-group-header">
+                    <span className="cfs-group-name">{group.label}</span>
+                    {group.isDefault && <span className="cfs-default-badge">default</span>}
+                    {!group.isDefault && (
+                      <button 
+                        className="cfs-remove-group-btn"
+                        onClick={() => removeGroup(group.name)}
+                        title="Remove group"
+                      >−</button>
+                    )}
+                    <button 
+                      className="cfs-edit-rules-btn"
+                      onClick={() => setEditingGroup(editingGroup === group.name ? null : group.name)}
+                      title="Edit rules"
+                    >
+                      {editingGroup === group.name ? '▲' : '▼'}
+                    </button>
+                  </div>
+                  
+                  {/* Rules editor (expanded) */}
+                  {editingGroup === group.name && (
+                    <div className="cfs-rules-editor">
+                      {group.rules.length === 0 && (
+                        <div className="cfs-no-rules">No rules (shows all conversations)</div>
+                      )}
+                      
+                      {group.rules.map((rule, ruleIndex) => (
+                        <div key={ruleIndex} className={`cfs-rule ${rule.type}`}>
+                          <div className="cfs-rule-header">
+                            <span className={`cfs-rule-type ${rule.type}`}>
+                              {rule.type === 'include' ? '✓ Include' : '✗ Exclude'}
+                            </span>
+                            <button 
+                              className={`cfs-logic-toggle ${rule.logic.toLowerCase()}`}
+                              onClick={() => toggleRuleLogic(group.name, ruleIndex)}
+                              title={`Click to switch to ${rule.logic === 'AND' ? 'OR' : 'AND'}`}
+                            >
+                              {rule.logic}
+                            </button>
+                            <button 
+                              className="cfs-remove-rule-btn"
+                              onClick={() => removeRule(group.name, ruleIndex)}
+                              title="Remove rule"
+                            >✕</button>
+                          </div>
+                          
+                          <div className="cfs-rule-tags">
+                            {rule.tags.map(tag => (
+                              <span key={tag} className="cfs-tag">
+                                {tag}
+                                <button onClick={() => removeTagFromRule(group.name, ruleIndex, tag)}>×</button>
+                              </span>
+                            ))}
+                            <input 
+                              type="text"
+                              className="cfs-tag-input"
+                              placeholder="+ tag"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && e.target.value) {
+                                  addTagToRule(group.name, ruleIndex, e.target.value);
+                                  e.target.value = '';
+                                }
+                              }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {/* Add rule buttons */}
+                      <div className="cfs-add-rules">
+                        <button 
+                          className="cfs-add-rule-btn include"
+                          onClick={() => addRule(group.name, 'include')}
+                        >+ Include Rule</button>
+                        <button 
+                          className="cfs-add-rule-btn exclude"
+                          onClick={() => addRule(group.name, 'exclude')}
+                        >+ Exclude Rule</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="conversation-list">
