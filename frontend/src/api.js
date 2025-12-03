@@ -206,4 +206,73 @@ export const api = {
     }
     return response.json();
   },
+
+  // ===== TAG API =====
+
+  /**
+   * Get all known tags for autocomplete.
+   */
+  async getAllTags() {
+    const response = await fetch(`${API_BASE}/api/tags`);
+    if (!response.ok) {
+      throw new Error('Failed to get tags');
+    }
+    return response.json();
+  },
+
+  /**
+   * Generate tags for a message exchange.
+   */
+  async generateTags(userMessage, aiResponse, existingTags = []) {
+    const response = await fetch(`${API_BASE}/api/tags/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_message: userMessage,
+        ai_response: aiResponse,
+        existing_tags: existingTags,
+      }),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to generate tags');
+    }
+    return response.json();
+  },
+
+  /**
+   * Check for missing tags and get suggestions.
+   */
+  async checkMissingTags(userMessage, aiResponse, currentTags = []) {
+    const response = await fetch(`${API_BASE}/api/tags/check-missing`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_message: userMessage,
+        ai_response: aiResponse,
+        existing_tags: currentTags,
+      }),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to check missing tags');
+    }
+    return response.json();
+  },
+
+  /**
+   * Add tags to a specific message.
+   */
+  async addMessageTags(conversationId, messageIndex, tags) {
+    const response = await fetch(
+      `${API_BASE}/api/conversations/${conversationId}/messages/${messageIndex}/tags`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tags }),
+      }
+    );
+    if (!response.ok) {
+      throw new Error('Failed to add tags');
+    }
+    return response.json();
+  },
 };

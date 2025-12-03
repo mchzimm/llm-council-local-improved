@@ -4,6 +4,7 @@ import ToolSteps from './ToolSteps';
 import Stage1 from './Stage1';
 import Stage2 from './Stage2';
 import Stage3 from './Stage3';
+import TagBar from './TagBar';
 import './ChatInterface.css';
 
 export default function ChatInterface({
@@ -249,6 +250,14 @@ export default function ChatInterface({
                       </button>
                     </div>
                   </div>
+                  {/* Tag bar for user messages */}
+                  <TagBar
+                    conversationId={conversationId}
+                    messageIndex={index}
+                    role="user"
+                    messageContent={msg.content}
+                    aiResponse={messages[index + 1]?.stage3?.response || ''}
+                  />
                 </div>
               ) : (
                 <div className={`assistant-message ${(msg.stage3 || msg.streaming?.stage3?.content) ? 'has-content' : ''}`}>
@@ -543,6 +552,16 @@ export default function ChatInterface({
                         {(msg.responseType === 'direct' || msg.stage3?.type === 'direct' || msg.stage3?.type === 'memory') ? 'Direct response complete' : 'Council deliberation complete'}
                       </span>
                     </div>
+                  )}
+                  {/* Tag bar for AI messages - only show when complete */}
+                  {msg.stage3 && !msg.streaming?.stage3?.isStreaming && (
+                    <TagBar
+                      conversationId={conversationId}
+                      messageIndex={index}
+                      role="assistant"
+                      messageContent={msg.stage3?.response || ''}
+                      aiResponse={msg.stage3?.response || ''}
+                    />
                   )}
                 </div>
               )}

@@ -2,7 +2,7 @@
 
 import asyncio
 import time
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from .lmstudio import query_model_with_retry
 from .config_loader import load_config
 
@@ -191,6 +191,122 @@ class TitleGenerationService:
         
         # Ensure it's not empty after cleaning
         return title.strip() if title.strip() else ""
+    
+    async def check_title_evolution(
+        self,
+        conversation_id: str,
+        current_title: str,
+        last_user_message: str,
+        last_response: str
+    ) -> Optional[str]:
+        """
+        Check if conversation theme has evolved and generate new title if needed.
+        
+        This is a 2-stage process:
+        1. Ask if the conversation theme has changed based on last messages
+        2. If yes, generate a new title
+        
+        Args:
+            conversation_id: ID of the conversation
+            current_title: Current conversation title
+            last_user_message: The last user message
+            last_response: The last AI response
+            
+        Returns:
+            New title if theme changed, None otherwise
+        """
+        self._refresh_config()
+        
+        config = load_config()
+        chairman_model = config['models']['chairman']['id']
+        
+        # Check circuit breaker
+        if self._is_circuit_open(chairman_model):
+            return None
+        
+        # Stage 1: Check if theme has changed
+        check_messages = [
+            {
+                "role": "system",
+                "content": """You are analyzing whether a conversation's theme has evolved or changed.
+Compare the current title with the latest exchange. Answer with ONLY "YES" or "NO".
+Answer "YES" if:
+- The topic has significantly shifted
+- A new main subject has emerged
+- The original title no longer captures the conversation's focus
+Answer "NO" if:
+- The conversation continues on the same topic
+- It's just a follow-up question on the same subject
+- The title still accurately represents the conversation"""
+            },
+            {
+                "role": "user",
+                "content": f"""Current title: "{current_title}"
+
+Last user message: "{last_user_message[:500]}"
+
+Last AI response (truncated): "{last_response[:500]}..."
+
+Has the conversation theme significantly changed? (YES/NO only)"""
+            }
+        ]
+        
+        try:
+            check_response = await query_model_with_retry(
+                model=chairman_model,
+                messages=check_messages,
+                for_title=True
+            )
+            
+            if not check_response or not check_response.get('content'):
+                return None
+            
+            answer = check_response['content'].strip().upper()
+            
+            # Check if answer indicates theme changed
+            if "YES" not in answer:
+                print(f"[Title Evolution] Theme unchanged for {conversation_id[:8]}")
+                return None
+            
+            print(f"[Title Evolution] Theme changed for {conversation_id[:8]}, generating new title...")
+            
+            # Stage 2: Generate new title
+            title_messages = [
+                {
+                    "role": "system",
+                    "content": "Generate a short, descriptive title (3-5 words) that captures the current theme of this conversation. Only respond with the title, nothing else."
+                },
+                {
+                    "role": "user",
+                    "content": f"""Previous title: "{current_title}"
+
+Latest user message: "{last_user_message[:500]}"
+
+Latest AI response (truncated): "{last_response[:300]}..."
+
+Generate a new title that better captures the current conversation theme:"""
+                }
+            ]
+            
+            title_response = await query_model_with_retry(
+                model=chairman_model,
+                messages=title_messages,
+                for_title=True
+            )
+            
+            if title_response and title_response.get('content'):
+                new_title = self._clean_title(title_response['content'])
+                if new_title and new_title != current_title:
+                    self._record_success(chairman_model)
+                    print(f"[Title Evolution] New title: '{new_title}'")
+                    return new_title
+            
+            return None
+            
+        except Exception as e:
+            print(f"[Title Evolution] Error: {e}")
+            self._record_failure(chairman_model)
+            return None
 
 
 # Global instance

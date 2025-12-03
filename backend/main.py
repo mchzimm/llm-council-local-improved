@@ -33,6 +33,7 @@ from .config_loader import load_config, get_memory_config
 from .model_metrics import get_all_metrics, get_model_ranking, cleanup_invalid_models
 from .mcp.registry import get_mcp_registry, initialize_mcp, shutdown_mcp
 from .memory_service import get_memory_service, initialize_memory, get_short_term_memory_service, initialize_short_term_memory
+from .tag_service import tag_service
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -228,6 +229,92 @@ async def get_memory_names():
         "user_name": memory_service.user_name,
         "ai_name": memory_service.ai_name,
         "loaded": memory_service.names_loaded
+    }
+
+
+# ===== TAG ENDPOINTS =====
+
+class AddTagsRequest(BaseModel):
+    """Request to add tags to a message."""
+    tags: List[str]
+
+
+class GenerateTagsRequest(BaseModel):
+    """Request to generate tags for a message."""
+    user_message: str
+    ai_response: str
+    existing_tags: Optional[List[str]] = None
+
+
+@app.get("/api/tags")
+async def get_all_tags():
+    """Get all known tags for autocomplete/suggestions."""
+    return {
+        "tags": tag_service.get_all_known_tags()
+    }
+
+
+@app.post("/api/tags/generate")
+async def generate_tags(request: GenerateTagsRequest):
+    """Generate tags for a conversation exchange."""
+    tags = await tag_service.generate_tags(
+        request.user_message,
+        request.ai_response,
+        request.existing_tags
+    )
+    return {
+        "success": True,
+        "tags": tags
+    }
+
+
+@app.post("/api/tags/check-missing")
+async def check_missing_tags(request: GenerateTagsRequest):
+    """Check if any important tags are missing."""
+    current_tags = request.existing_tags or []
+    suggestions = await tag_service.check_missing_tags(
+        request.user_message,
+        request.ai_response,
+        current_tags
+    )
+    return {
+        "success": True,
+        "suggestions": suggestions,
+        "has_suggestions": len(suggestions) > 0
+    }
+
+
+@app.patch("/api/conversations/{conversation_id}/messages/{message_index}/tags")
+async def update_message_tags(
+    conversation_id: str, 
+    message_index: int, 
+    request: AddTagsRequest
+):
+    """Add tags to a specific message in a conversation."""
+    conversation = storage.get_conversation(conversation_id)
+    if conversation is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    
+    messages = conversation.get("messages", [])
+    if message_index < 0 or message_index >= len(messages):
+        raise HTTPException(status_code=404, detail="Message not found")
+    
+    # Get current message content
+    message = messages[message_index]
+    content = message.get("content", "")
+    
+    # Add tags to content
+    new_content = tag_service.add_tags_to_content(content, request.tags)
+    message["content"] = new_content
+    
+    # Save conversation
+    storage.save_conversation(conversation)
+    
+    return {
+        "success": True,
+        "message_index": message_index,
+        "tags": request.tags,
+        "updated_content": new_content
     }
 
 
@@ -524,6 +611,24 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
     )
 
 
+async def _check_and_update_title(
+    conversation_id: str, 
+    current_title: str, 
+    user_message: str, 
+    response: str
+):
+    """Helper to check title evolution and update if theme changed."""
+    try:
+        new_title = await title_service.check_title_evolution(
+            conversation_id, current_title, user_message, response
+        )
+        if new_title:
+            storage.update_conversation_title(conversation_id, new_title)
+            print(f"[Title Evolution] Updated title for {conversation_id[:8]}: '{new_title}'")
+    except Exception as e:
+        print(f"[Title Evolution] Error checking title: {e}")
+
+
 @app.post("/api/conversations/{conversation_id}/message/stream-tokens")
 async def send_message_stream_tokens(conversation_id: str, request: SendMessageRequest):
     """
@@ -737,6 +842,16 @@ async def send_message_stream_tokens(conversation_id: str, request: SendMessageR
                         request.content, response_text, model_name, conversation_id
                     ))
                 
+                # Check title evolution (async, non-blocking)
+                current_conv = storage.get_conversation(conversation_id)
+                if current_conv and len(current_conv.get("messages", [])) > 2:  # Skip for first message pair
+                    current_title = current_conv.get("title", "")
+                    if not current_title.startswith("Conversation "):  # Only check if title was already generated
+                        asyncio.create_task(_check_and_update_title(
+                            conversation_id, current_title, request.content, 
+                            direct_result.get("response", "")
+                        ))
+                
                 yield f"data: {json.dumps({'type': 'complete', 'response_type': 'direct'})}\n\n"
                 return
             
@@ -933,10 +1048,20 @@ async def send_message_stream_tokens(conversation_id: str, request: SendMessageR
             stm_service = get_short_term_memory_service()
             if stm_service._available and stage3_result:
                 asyncio.create_task(stm_service.extract_and_store_memories(
-                    user_query,
+                    request.content,
                     stage3_result.get("response", ""),
                     conversation_id
                 ))
+            
+            # Check title evolution (async, non-blocking)
+            current_conv = storage.get_conversation(conversation_id)
+            if current_conv and len(current_conv.get("messages", [])) > 2:  # Skip for first message pair
+                current_title = current_conv.get("title", "")
+                if not current_title.startswith("Conversation "):  # Only check if title was already generated
+                    asyncio.create_task(_check_and_update_title(
+                        conversation_id, current_title, request.content, 
+                        stage3_result.get("response", "")
+                    ))
 
             yield f"data: {json.dumps({'type': 'complete', 'response_type': 'deliberation'})}\n\n"
 

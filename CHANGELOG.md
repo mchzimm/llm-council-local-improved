@@ -4,6 +4,29 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.44.0
+**Branch:** `v0.44.0`  
+**Completed:** 2025-12-03 07:00 UTC | 2025-12-02 23:00 PST
+
+**Features:**
+- **Title Evolution System**: Automatic title updates when conversation theme changes
+  - 2-stage LLM process: (1) Detect theme change, (2) Generate new title
+  - Runs async after each response completion
+  - Only checks conversations with generated titles (skips ID-based)
+  - Keeps titles relevant as topics evolve
+- **Message Tag System**: Visual tag management on messages
+  - TagBar component below user (blue) and AI (green) messages
+  - "+" button for manual tag addition
+  - "✨" sparkle button for AI-powered tag suggestions
+  - Tags stored in HTML comments (invisible to LLM)
+  - Integrates with CFS filter system
+- **Tag Service & API**: Backend tag management
+  - `TagService` class for tag generation and vocabulary
+  - `GET /api/tags` - All known tags for autocomplete
+  - `POST /api/tags/generate` - AI generates relevant tags
+  - `POST /api/tags/check-missing` - AI suggests missing tags
+  - `PATCH /api/conversations/{id}/messages/{idx}/tags` - Add tags
+
 ### v0.43.0
 **Branch:** `v0.43.0`  
 **Completed:** 2025-12-02 16:15 UTC | 2025-12-02 08:15 PST

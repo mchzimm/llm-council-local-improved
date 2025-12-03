@@ -17,7 +17,26 @@ In a bit more detail, here is what happens when you submit a query:
 
 ## Key Features
 
-### Current Release (v0.43.0)
+### Current Release (v0.44.0)
+- **Title Evolution System**: Auto-updates conversation titles when theme changes
+  - 2-stage process: (1) Check if theme changed, (2) Generate new title if needed
+  - Runs automatically after each response (async, non-blocking)
+  - Only triggers for conversations with generated titles (not ID-based)
+  - Keeps titles relevant as conversations evolve
+- **Message Tag System**: Add and manage tags on user/AI messages
+  - TagBar appears below each message (blue line for user, green for AI)
+  - Click "+" to add custom tags manually
+  - Click "✨" (sparkle) for AI to suggest missing tags
+  - Tags stored in message content as HTML comments (invisible to LLM)
+  - Tags used by CFS filter system for conversation organization
+  - Auto-complete from known tags (vocabulary grows with usage)
+- **Tag API Endpoints**: Backend support for tag management
+  - `GET /api/tags` - Get all known tags
+  - `POST /api/tags/generate` - AI generates relevant tags
+  - `POST /api/tags/check-missing` - AI suggests missing tags
+  - `PATCH /api/conversations/{id}/messages/{idx}/tags` - Add tags to message
+
+### Previous Release (v0.43.0)
 - **CFS Overlay Configuration**: Full conversation filter system with rules-based logic
   - Click ⚙️ button to open CFS configuration overlay
   - Add custom filter groups with + button
@@ -26,38 +45,6 @@ In a bit more detail, here is what happens when you submit a query:
   - AND/OR logic toggle per rule for flexible matching
   - Default groups: All, User (exclude #auto #test), Test (include #auto AND #test)
   - Groups and rules persist in localStorage
-
-### Previous Release (v0.42.2)
-- **UI State Fixes**: Multiple fixes for classification and frame state
-  - Classification spinner now correctly disappears when Stage 1 begins
-  - Tool steps collapse correctly for saved conversations
-  - Memory name search now handles user name queries properly
-
-### Previous Release (v0.42.0)
-- **Auto-Collapse Frames on Completion**: Tool steps and deliberation frames now auto-collapse
-  - Tool steps collapse when response completes (streaming → complete transition)
-  - Deliberation sections start closed (`open={false}`) for completed conversations
-  - Saved conversations load with frames collapsed by default
-  - Click to expand and view details as needed
-  - Cleaner UI focused on final answers
-- **Collapsible Deliberation Process**: Council deliberation auto-collapses when complete
-  - Stage 1, 2, 3 wrapped in expandable `<details>` element
-  - "Final Council Answer" displayed prominently outside collapsible
-  - Click to expand and see full deliberation process
-  - Cleaner UI focused on the answer while preserving transparency
-
-- **Conversation Pinning**: Keep important conversations at the top
-  - Pin button (📍/📌) on each conversation in sidebar
-  - Pinned conversations appear at top with yellow highlight
-  - Pin state persisted across sessions via localStorage
-
-- **Memory Status Always Visible**: Memory retrieval status no longer disappears
-  - Shows "Found X memories" for all final states
-  - Details visible for both 'used' and 'not_used' states
-  - Improved transparency into memory search process
-
-- **ESC Key Stops App**: Press ESC in terminal to stop servers
-  - Alternative to Ctrl+C for stopping `./start.sh`
   - Clean shutdown of backend and frontend
 
 ### Previous Release (v0.38.1)
