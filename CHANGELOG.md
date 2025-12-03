@@ -4,6 +4,18 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.45.1
+**Branch:** `v0.45.1`  
+**Completed:** 2025-12-03 17:30 UTC | 2025-12-03 09:30 PST
+
+**Fixes:**
+- **Title Update Debug Logging**: Added comprehensive logging to diagnose sidebar title not refreshing issue
+  - Backend logs when `title_complete` SSE event is sent
+  - API layer logs when `title_complete` event is received via SSE
+  - App.jsx logs when `title_complete` case is handled
+  - Added null check for `event.title` before state update
+- These logs will help identify where title updates are being dropped in the streaming path
+
 ### v0.45.0
 **Branch:** `v0.45.0`  
 **Completed:** 2025-12-03 15:15 UTC | 2025-12-03 07:15 PST

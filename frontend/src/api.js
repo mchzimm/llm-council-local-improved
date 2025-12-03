@@ -166,6 +166,9 @@ export const api = {
           const data = line.slice(6);
           try {
             const event = JSON.parse(data);
+            if (event.type === 'title_complete') {
+              console.log('[API] title_complete SSE event received:', event);
+            }
             onEvent(event.type, event);
           } catch (e) {
             console.error('Failed to parse SSE event:', e);
@@ -178,6 +181,9 @@ export const api = {
     if (buffer.startsWith('data: ')) {
       try {
         const event = JSON.parse(buffer.slice(6));
+        if (event.type === 'title_complete') {
+          console.log('[API] title_complete SSE event received (final):', event);
+        }
         onEvent(event.type, event);
       } catch (e) {
         // Ignore incomplete final chunk

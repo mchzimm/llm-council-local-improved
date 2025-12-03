@@ -801,11 +801,14 @@ function App() {
 
           case 'title_complete':
             // Update conversation title in list
-            setConversations(prev => prev.map(conv => 
-              conv.id === currentConversationId 
-                ? { ...conv, title: event.title }
-                : conv
-            ));
+            console.log('[App] title_complete event received:', { title: event.title, conversationId: currentConversationId });
+            if (event.title) {
+              setConversations(prev => prev.map(conv => 
+                conv.id === currentConversationId 
+                  ? { ...conv, title: event.title }
+                  : conv
+              ));
+            }
             break;
 
           case 'complete':
@@ -995,11 +998,14 @@ function App() {
 
         case 'title_complete':
           // Update conversation title in list (for reruns with generic titles)
-          setConversations(prev => prev.map(conv => 
-            conv.id === currentConversationId 
-              ? { ...conv, title: event.title }
-              : conv
-          ));
+          console.log('[App runCouncil] title_complete event received:', { title: event.title, conversationId: currentConversationId });
+          if (event.title) {
+            setConversations(prev => prev.map(conv => 
+              conv.id === currentConversationId 
+                ? { ...conv, title: event.title }
+                : conv
+            ));
+          }
           break;
 
         case 'direct_response_start':
