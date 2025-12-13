@@ -27,8 +27,8 @@ RUN pip install --no-cache-dir uv && \
 # Copy custom config
 COPY config.yaml /app/graphiti/mcp_server/config/config.yaml
 
-# Set environment variables for LM Studio
-ENV OPENAI_BASE_URL=http://192.168.1.111:11434/v1
+# Set environment variables for LM Studio (use host.docker.internal for macOS Docker)
+ENV OPENAI_BASE_URL=http://host.docker.internal:11434/v1
 ENV OPENAI_API_KEY=lms
 
 EXPOSE 8000

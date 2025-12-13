@@ -4,6 +4,17 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.46.2
+**Branch:** `v0.46.2`  
+**Completed:** 2025-12-13 03:35 UTC | 2025-12-12 19:35 PST
+
+**Fixes:**
+- **Graphiti Docker Container Networking**: Fixed container unable to connect to LM Studio and FalkorDB
+  - Changed all IP references from `192.168.1.111` to `host.docker.internal` (macOS Docker)
+  - Changed FalkorDB URI from `127.0.0.1:6379` to `host.docker.internal:6379`
+  - Updated `graphiti_config.json`, `config.yaml`, `Dockerfile`, and `README.md`
+  - `host.docker.internal` is the special DNS name that allows Docker containers to access host services on macOS
+
 ### v0.46.1
 **Branch:** `v0.46.1`  
 **Completed:** 2025-12-13 02:46 UTC | 2025-12-12 18:46 PST

@@ -3,7 +3,7 @@
     "provider": "lmstudio",
     "model": "llama-3.2-3b-instruct",
     "api_key": "lms",
-    "base_url": "http://192.168.1.111:11434/v1",
+    "base_url": "http://host.docker.internal:11434/v1",
     "temperature": 0.0,
     "max_tokens": 16384
   },
@@ -11,12 +11,12 @@
     "provider": "lmstudio",
     "model": "text-embedding-nomic-embed-text-v1.5@f16",
     "api_key": "lms",
-    "base_url": "http://192.168.1.111:11434/v1",
+    "base_url": "http://host.docker.internal:11434/v1",
     "embedding_dim": 768
   },
   "database": {
     "provider": "falkordb",
-    "uri": "redis://192.168.1.111:6379",
+    "uri": "redis://host.docker.internal:6379",
     "password": "",
     "database": "graphiti"
   },

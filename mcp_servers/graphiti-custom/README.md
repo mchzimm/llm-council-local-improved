@@ -6,7 +6,7 @@ Custom fork of Graphiti MCP server with LM Studio support via custom `LMStudioCl
 
 - **Strict JSON Schema** - Uses `additionalProperties: false` for LM Studio compatibility
 - **Automatic retry** - Retries failed JSON parsing with error context
-- **FalkorDB support** - Configured for FalkorDB at `redis://192.168.1.111:6379`
+- **FalkorDB support** - Configured for FalkorDB at `host.docker.internal:6379` (macOS Docker)
 - **JSON Configuration** - Easy configuration via `graphiti_config.json`
 
 ## Changes from upstream
@@ -28,7 +28,9 @@ Custom fork of Graphiti MCP server with LM Studio support via custom `LMStudioCl
 
 ## Configuration
 
-Edit `graphiti_config.json` to configure LLM, embedder, and database:
+Edit `graphiti_config.json` to configure LLM, embedder, and database.
+
+**Note:** Use `host.docker.internal` instead of `localhost` or `127.0.0.1` when running in Docker on macOS, as this allows the container to access services running on the host machine.
 
 ```json
 {
@@ -36,7 +38,7 @@ Edit `graphiti_config.json` to configure LLM, embedder, and database:
     "provider": "lmstudio",
     "model": "qwen2.5-14b-instruct",
     "api_key": "lms",
-    "base_url": "http://192.168.1.111:11434/v1",
+    "base_url": "http://host.docker.internal:11434/v1",
     "temperature": 0.0,
     "max_tokens": 16384
   },
@@ -44,12 +46,12 @@ Edit `graphiti_config.json` to configure LLM, embedder, and database:
     "provider": "openai_generic",
     "model": "text-embedding-nomic-embed-text-v1.5@f16",
     "api_key": "lms",
-    "base_url": "http://192.168.1.111:11434/v1",
+    "base_url": "http://host.docker.internal:11434/v1",
     "embedding_dim": 768
   },
   "database": {
     "provider": "falkordb",
-    "uri": "redis://192.168.1.111:6379",
+    "uri": "redis://host.docker.internal:6379",
     "password": "",
     "database": "graphiti"
   },
@@ -94,9 +96,9 @@ python3 generate_config.py  # Generate config from JSON
 docker build -t graphiti-custom .
 docker run -p 8000:8000 \
   -e OPENAI_API_KEY=lms \
-  -e OPENAI_BASE_URL=http://192.168.1.111:11434/v1 \
+  -e OPENAI_BASE_URL=http://host.docker.internal:11434/v1 \
   -e EMBEDDER_API_KEY=lms \
-  -e EMBEDDER_BASE_URL=http://192.168.1.111:11434/v1 \
+  -e EMBEDDER_BASE_URL=http://host.docker.internal:11434/v1 \
   -e EMBEDDER_DIM=768 \
   graphiti-custom
 ```

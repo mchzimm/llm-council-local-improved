@@ -30,6 +30,20 @@ cleanup() {
 kill_port 8001
 kill_port 5173
 
+# Start FalkorDB (Docker)
+FALKORDB_CONTAINER="falkordb"
+echo "Starting FalkorDB..."
+if docker ps --format '{{.Names}}' | grep -q "^${FALKORDB_CONTAINER}$"; then
+    echo "✓ FalkorDB container already running"
+else
+    if docker ps -a --format '{{.Names}}' | grep -q "^${FALKORDB_CONTAINER}$"; then
+        docker start "$FALKORDB_CONTAINER" >/dev/null
+    else
+        docker run -d --name "$FALKORDB_CONTAINER" -p 6379:6379 falkordb/falkordb:latest >/dev/null
+    fi
+    echo "✓ FalkorDB started on redis://127.0.0.1:6379"
+fi
+
 # Start Graphiti MCP Server (Docker)
 echo "Starting Graphiti MCP Server..."
 ./mcp_servers/graphiti-custom/start.sh

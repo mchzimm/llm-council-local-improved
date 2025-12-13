@@ -14,7 +14,7 @@ llm:
   providers:
     openai_generic:
       api_key: lms
-      api_url: http://192.168.1.111:11434/v1
+      api_url: http://host.docker.internal:11434/v1
 embedder:
   provider: lmstudio
   model: text-embedding-nomic-embed-text-v1.5@f16
@@ -22,7 +22,7 @@ database:
   provider: falkordb
   providers:
     falkordb:
-      uri: redis://192.168.1.111:6379
+      uri: redis://host.docker.internal:6379
       password: ''
       database: graphiti
 graphiti:
