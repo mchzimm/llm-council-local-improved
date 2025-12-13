@@ -135,7 +135,7 @@ Example for "what was the weather yesterday?":
     {{
       "step_number": 1,
       "description": "Get current location",
-      "tool": "system-geo-location.get-geo-location",
+      "tool": "system-geo-location.get-system-geo-location",
       "depends_on": [],
       "parameters": {{}}
     }},
@@ -157,7 +157,7 @@ Example for "what was the weather like last Tuesday?":
     {{
       "step_number": 1,
       "description": "Get current location",
-      "tool": "system-geo-location.get-geo-location",
+      "tool": "system-geo-location.get-system-geo-location",
       "depends_on": [],
       "parameters": {{}}
     }},

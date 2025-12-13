@@ -4,6 +4,15 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.48.3
+**Branch:** `v0.48.3`  
+**Completed:** 2025-12-13 12:35 UTC | 2025-12-13 04:35 PST
+
+**Fixes:**
+- **Geo-Location Tool Name**: Fixed incorrect tool name in orchestration prompt
+  - Changed `system-geo-location.get-geo-location` to `system-geo-location.get-system-geo-location`
+  - This fixes "Unknown tool" error when orchestration tries to get user location
+
 ### v0.48.2
 **Branch:** `v0.48.2`  
 **Completed:** 2025-12-13 12:20 UTC | 2025-12-13 04:20 PST
