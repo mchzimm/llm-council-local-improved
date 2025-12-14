@@ -52,6 +52,7 @@ async def needs_multi_tool_orchestration(user_query: str) -> bool:
     multi_context_patterns = [
         ("weather", "here"),  # Need location + current time + weather
         ("weather", "now"),
+        ("weather", "in"),  # Weather in a specific location
         ("time", "in"),  # Time in different location
     ]
     
@@ -172,6 +173,42 @@ Example for "what was the weather like last Tuesday?":
     }}
   ]
 }}
+
+Example for "what's the weather like now in Tokyo, Japan?" (specific location mentioned):
+{{
+  "steps": [
+    {{
+      "step_number": 1,
+      "description": "Get current weather for Tokyo",
+      "tool": "location-time.get-weather-for-location-and-date",
+      "depends_on": [],
+      "parameters": {{
+        "location_name": "Tokyo, Japan",
+        "date": "TODAY"
+      }}
+    }}
+  ]
+}}
+
+Example for "what was the weather like yesterday in Paris?" (specific location + relative date):
+{{
+  "steps": [
+    {{
+      "step_number": 1,
+      "description": "Get yesterday's weather for Paris",
+      "tool": "location-time.get-weather-for-location-and-date",
+      "depends_on": [],
+      "parameters": {{
+        "location_name": "Paris, France",
+        "date": "YESTERDAY"
+      }}
+    }}
+  ]
+}}
+
+IMPORTANT: When a specific location is mentioned (city, country, address), use "location-time.get-weather-for-location-and-date" directly.
+Only use "system-geo-location.get-system-geo-location" when no location is specified and you need the user's current location.
+
 
 Now create the plan for: "{user_query}"
 """

@@ -4,6 +4,19 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.49.1
+**Branch:** `v0.49.1`  
+**Completed:** 2025-12-14 01:50 UTC | 2025-12-13 17:50 PST
+
+**Fixes:**
+- **Weather for Specific Locations**: Fixed weather query returning wrong location data
+  - Issue: "weather in Butuan City" returned Bellevue, WA weather (from IP geolocation)
+  - Updated orchestration prompt with examples for location-specific queries
+  - Now uses `location-time.get-weather-for-location-and-date` directly when location is mentioned
+  - Added "weather in" pattern to orchestration detection
+  - Added current conditions to `get-weather-for-location-and-date` when querying today's date
+  - Verified: Butuan City now correctly returns 84°F instead of 47°F
+
 ### v0.49.0
 **Branch:** `v0.49.0`  
 **Completed:** 2025-12-14 01:45 UTC | 2025-12-13 17:45 PST

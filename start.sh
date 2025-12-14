@@ -50,6 +50,7 @@ cleanup() {
         done
         echo "✓ Docker containers removed"
     fi
+    flush(){ while read -N 1 -t 0.01; do :; done }
     echo -e "\n"
     exit 0
 }

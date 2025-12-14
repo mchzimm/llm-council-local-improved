@@ -173,9 +173,21 @@ def get_weather_for_location_and_date(
     today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     days_diff = (target_date - today).days
     is_historical = days_diff < 0
+    is_today = days_diff == 0
     
     try:
-        if is_historical:
+        if is_today:
+            # For today, include current conditions
+            url = (
+                f"https://api.open-meteo.com/v1/forecast?"
+                f"latitude={lat}&longitude={lon}"
+                f"&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m"
+                f"&hourly=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m"
+                f"&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code"
+                f"&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch"
+                f"&timezone=auto"
+            )
+        elif is_historical:
             # Historical API
             url = (
                 f"https://archive-api.open-meteo.com/v1/archive?"
@@ -204,6 +216,7 @@ def get_weather_for_location_and_date(
         with urllib.request.urlopen(req, timeout=15) as response:
             data = json.loads(response.read().decode('utf-8'))
         
+        current = data.get('current', {})
         daily = data.get('daily', {})
         hourly = data.get('hourly', {})
         
@@ -220,8 +233,19 @@ def get_weather_for_location_and_date(
             "location": geo['display_name'],
             "coordinates": {"lat": lat, "lon": lon},
             "date": date,
-            "data_type": "historical" if is_historical else "forecast"
+            "data_type": "current" if is_today else ("historical" if is_historical else "forecast")
         }
+        
+        # Add current conditions if available (for today)
+        if current:
+            code = current.get('weather_code', 0) or 0
+            result["current"] = {
+                "temperature": current.get('temperature_2m'),
+                "feels_like": current.get('apparent_temperature'),
+                "humidity": current.get('relative_humidity_2m'),
+                "conditions": weather_codes.get(code, f"Code {code}"),
+                "wind_speed": current.get('wind_speed_10m')
+            }
         
         if daily:
             code = daily.get('weather_code', [0])[0] or 0
