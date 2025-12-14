@@ -34,6 +34,7 @@ from .model_metrics import get_all_metrics, get_model_ranking, cleanup_invalid_m
 from .mcp.registry import get_mcp_registry, initialize_mcp, shutdown_mcp
 from .memory_service import get_memory_service, initialize_memory, get_short_term_memory_service, initialize_short_term_memory
 from .tag_service import tag_service
+from .research_controller import augment_query_with_memory, record_interaction_to_memory
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

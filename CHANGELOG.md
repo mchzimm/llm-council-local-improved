@@ -4,6 +4,25 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.51.0
+**Branch:** `v0.51.0`  
+**Completed:** 2025-12-14 04:30 UTC | 2025-12-13 20:30 PST
+
+**Features:**
+- **Self-Improving Research Controller**: New module for intelligent, learning conversation system
+  - `SelfImprovingResearchController`: State machine for recursive research with memory
+    - Retrieves context from Graphiti memory before processing queries
+    - Runs iterative loop: Think → Research/Build/Answer (max 50 rounds)
+    - Records lessons learned back to memory
+    - Can dynamically build new tools via mcp-dev-team
+  - `CONTROLLER_SYSTEM_PROMPT`: Structured prompt for LLM decision-making
+    - Three decision paths: COMPLETE (answer from memory), USE EXISTING (use tool), BUILD NEW (create tool)
+    - JSON output format with thought_process, status, action, lessons_learned
+  - `augment_query_with_memory()`: Lightweight pre-processing to add memory context
+  - `record_interaction_to_memory()`: Post-processing to store learned knowledge
+  - Knowledge categories: fact, process, lesson, preference, entity, relationship, error_correction
+  - Integrated into main.py for use in message processing
+
 ### v0.50.1
 **Branch:** `v0.50.1`  
 **Completed:** 2025-12-14 03:45 UTC | 2025-12-13 19:45 PST
