@@ -4,6 +4,15 @@ Completed changes with version, branch, and timestamp information.
 
 ## Completed Changes
 
+### v0.52.3
+**Branch:** `v0.52.3`  
+**Completed:** 2025-12-14 09:20 UTC | 2025-12-14 01:20 PST
+
+**Fixes:**
+- **NameError Fix**: Fixed `force_deliberation is not defined` error at line 889 - removed dead code referencing undefined variables
+- **Graphiti Port Fix**: Updated `graphiti_config.json` to use port 1234 (LM Studio) instead of 11434 (Ollama)
+- **Embedder Provider Fix**: Changed embedder provider from `lmstudio` to `openai_generic` - the patch only added `openai_generic` case, not `lmstudio`
+
 ### v0.52.2
 **Branch:** `v0.52.2`  
 **Completed:** 2025-12-14 09:10 UTC | 2025-12-14 01:10 PST

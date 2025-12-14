@@ -885,10 +885,8 @@ async def send_message_stream_tokens(conversation_id: str, request: SendMessageR
             # Stage 1: Stream individual responses
             yield f"data: {json.dumps({'type': 'stage1_start'})}\n\n"
             
-            # Pass personality context if this is a personal question without memory
-            personality_ctx = personal_info if force_deliberation else None
             stage1_task = asyncio.create_task(
-                stage1_collect_responses_streaming(request.content, on_event, personality_ctx)
+                stage1_collect_responses_streaming(request.content, on_event, None)
             )
             
             # Stream stage 1 events
